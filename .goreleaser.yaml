@@ -1,0 +1,110 @@
+version: 2
+
+env:
+  - REGISTRY={{ if index .Env "REGISTRY"  }}{{ .Env.REGISTRY }}{{ end }}
+  - DOCKER_REGISTRY={{ if index .Env "DOCKER_REGISTRY"  }}{{ .Env.DOCKER_REGISTRY }}{{ end }}
+  - BUILDER={{ if index .Env "BUILDER"  }}{{ .Env.BUILDER }}{{ else }}default{{ end }}
+  - VERSION={{ if index .Env "VERSION"  }}{{ .Env.VERSION }}{{ end }}
+  - COMMIT={{ if index .Env "COMMIT"  }}{{ .Env.COMMIT }}{{ end }}
+
+snapshot:
+  # https://goreleaser.com/customization/snapshots/
+  name_template: '{{ trimprefix .Summary "v" }}'
+
+checksum:
+  # https://goreleaser.com/customization/checksum/
+  name_template: 'checksums.txt'
+
+release:
+  draft: true
+  prerelease: true
+
+builds:
+  - id: "llmos-gpu-stack"
+    binary: llmos-gpu-stack
+    env:
+      - CGO_ENABLED=0
+      - VERSION={{ .Env.VERSION }}
+      - COMMIT={{ .Env.COMMIT }}
+      - DATE={{ .Date }}
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    tags:
+      - netgo
+    ldflags:
+      - -s
+      - -w
+      - -X "github.com/llmos-ai/llmos-gpu-stack/pkg/version.Version={{ .Env.VERSION }}"
+      - -X "github.com/llmos-ai/llmos-gpu-stack/pkg/version.Commit={{ .Env.COMMIT }}"
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+dockers:
+  - use: buildx
+    goos: linux
+    goarch: amd64
+    dockerfile: package/Dockerfile
+    image_templates:
+      - "{{ .Env.REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.DOCKER_REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-amd64"
+    build_flag_templates:
+      - "--builder={{ .Env.BUILDER }}"
+      - "--pull"
+      - "--build-arg=REGISTRY={{ .Env.REGISTRY }}"
+      - "--build-arg=VERSION={{.Env.VERSION}}"
+      - "--build-arg=DATE={{.Date}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Env.VERSION}}"
+      - "--label=org.opencontainers.image.source=https://github.com/llmos-ai/llmos-gpu-stack"
+      - "--platform=linux/amd64"
+    extra_files:
+      - package/entrypoint.sh
+      - scripts
+
+  - use: buildx
+    goos: linux
+    goarch: arm64
+    dockerfile: package/Dockerfile
+    image_templates:
+      - "{{ .Env.REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-arm64"
+      - "{{ .Env.DOCKER_REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-arm64"
+    build_flag_templates:
+      - "--builder={{ .Env.BUILDER }}"
+      - "--pull"
+      - "--build-arg=REGISTRY={{ .Env.REGISTRY }}"
+      - "--build-arg=VERSION={{.Env.VERSION}}"
+      - "--build-arg=DATE={{.Date}}"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Env.VERSION}}"
+      - "--label=org.opencontainers.image.source=https://github.com/llmos-ai/llmos-gpu-stack"
+      - "--platform=linux/arm64"
+    extra_files:
+      - package/entrypoint.sh
+      - scripts
+
+docker_manifests:
+  - use: docker
+    name_template: "{{ .Env.REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}"
+    image_templates:
+      - "{{ .Env.REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-arm64"
+  - use: docker
+    name_template: "{{ .Env.DOCKER_REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}"
+    image_templates:
+      - "{{ .Env.DOCKER_REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-amd64"
+      - "{{ .Env.DOCKER_REGISTRY }}/llmos-gpu-stack:{{ .Env.VERSION }}-arm64"
+dist: dist/cli

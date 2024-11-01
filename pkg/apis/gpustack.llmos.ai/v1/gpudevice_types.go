@@ -13,11 +13,12 @@ var (
 )
 
 // +genclient
-// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 // +genclient:nonNamespaced
-// +kubebuilder:resource:shortName=gpu,scope=Cluster
+// +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
+// +kubebuilder:object:root=true
+// +kubebuilder:resource:scope=Cluster
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="NODE NAME",type="string",JSONPath=".status.nodeName"
+// +kubebuilder:printcolumn:name="NODE_NAME",type="string",JSONPath=".status.nodeName"
 // +kubebuilder:printcolumn:name="VENDOR",type="string",JSONPath=".status.vendor"
 // +kubebuilder:printcolumn:name="DEVICE_NAME",type="string",JSONPath=".status.devName"
 // +kubebuilder:printcolumn:name="VRAM",type="integer",JSONPath=".status.vram"

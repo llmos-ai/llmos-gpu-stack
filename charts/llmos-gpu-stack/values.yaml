@@ -1,0 +1,136 @@
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  ## @param global.imageRegistry Global Docker image registry
+  ##
+  imageRegistry: ""
+  ## @param global.imagePullSecrets Global Docker registry secret names as an array
+  ## e.g.
+  ## imagePullSecrets:
+  ##   - myRegistryKeySecretName
+  ##
+  imagePullSecrets: []
+  imagePullPolicy: IfNotPresent
+
+priorityClassNames:
+  deviceManager: system-node-critical
+
+gpuStack:
+  serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Automatically mount a ServiceAccount's API credentials?
+    automount: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+  deviceManager:
+    replicas: 1
+
+    image:
+      repository: ghcr.io/llmos-ai/llmos-gpu-stack
+      pullPolicy: Always
+      # Overrides the image tag whose default is the chart appVersion.
+      tag: "main-head"
+
+    podAnnotations: {}
+    podLabels: {}
+    podSecurityContext: {}
+    securityContext: {}
+
+    service:
+      type: ClusterIP
+      port: 8080
+      profilePort: 6060
+
+    resources:
+      requests:
+        cpu: 200m
+        memory: 450Mi
+      limits:
+        cpu: 1
+        memory: 2Gi
+
+    volumes: []
+    volumeMounts: []
+    nodeSelector: {}
+    tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master
+        operator: Exists
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/control-plane
+        operator: Exists
+    affinity: {}
+
+    # This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+    livenessProbe:
+      httpGet:
+        path: /healthz
+        port: http
+        scheme: HTTP
+      periodSeconds: 30
+    readinessProbe:
+      httpGet:
+        path: /healthz
+        port: http
+        scheme: HTTP
+
+gpuOperator:
+  enabled: true
+gpu-operator:
+  driver:
+    enabled: false
+  toolkit:
+    env:
+      - name: CONTAINERD_CONFIG
+        value: /var/lib/rancher/k3s/agent/etc/containerd/config.toml
+      - name: CONTAINERD_SOCKET
+        value: /run/k3s/containerd/containerd.sock
+      - name: CONTAINERD_RUNTIME_CLASS
+        value: nvidia
+      - name: CONTAINERD_SET_AS_DEFAULT
+        value: "true"
+
+hami:
+  enabled: true
+  scheduler:
+    nodeLabelSelector:
+      gpustack.llmos.ai/gpu-node: "true"
+      gpustack.llmos.ai/iluvatar-node: "true"
+      gpustack.llmos.ai/mlu-node: "true"
+      gpustack.llmos.ai/mtrheads-node: "true"
+      gpustack.llmos.ai/ascend910a-node: "true"
+      gpustack.llmos.ai/ascend910b-node: "true"
+      gpustack.llmos.ai/ascend310p-node: "true"
+    defaultSchedulerPolicy:
+      nodeSchedulerPolicy: binpack
+      gpuSchedulerPolicy: spread
+    kubeScheduler:
+      enabled: true
+      image: k8s.gcr.io/kube-scheduler
+      imageTag: "v1.30.5"
+      imagePullPolicy: IfNotPresent
+  devicePlugin:
+    runtimeClassName: "nvidia"
+    nvidianodeSelector:
+      gpustack.llmos.ai/gpu-node: "true"
+
+volcano:
+  enabled: false
+  custom:
+    metrics_enable: false
+    admission_enable: true
+    admission_replicas: 1
+    controller_enable: true
+    controller_replicas: 1
+    scheduler_enable: true
+    scheduler_replicas: 1
+    leader_elect_enable: false
+    enabled_admissions: "/jobs/mutate,/jobs/validate,/podgroups/mutate,/pods/validate,/pods/mutate,/queues/mutate,/queues/validate"

@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "device-manager.fullname" . }}
+  labels:
+    {{- include "device-manager.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.gpuStack.deviceManager.replicas }}
+  selector:
+    matchLabels:
+      {{- include "llmos-gpu-stack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.gpuStack.deviceManager.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "device-manager.labels" . | nindent 8 }}
+        {{- with .Values.gpuStack.deviceManager.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "llmos-gpu-stack.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.gpuStack.deviceManager.podSecurityContext | nindent 8 }}
+      containers:
+        - name: "device-manager"
+          securityContext:
+            {{- toYaml .Values.gpuStack.deviceManager.securityContext | nindent 12 }}
+          image: "{{ .Values.gpuStack.deviceManager.image.repository }}:{{ .Values.gpuStack.deviceManager.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.gpuStack.deviceManager.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.gpuStack.deviceManager.service.port }}
+              protocol: TCP
+            - name: profile
+              containerPort: {{ .Values.gpuStack.deviceManager.service.profilePort }}
+              protocol: TCP
+          livenessProbe:
+            {{- toYaml .Values.gpuStack.deviceManager.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.gpuStack.deviceManager.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.gpuStack.deviceManager.resources | nindent 12 }}
+          {{- with .Values.gpuStack.deviceManager.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.gpuStack.deviceManager.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gpuStack.deviceManager.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gpuStack.deviceManager.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.gpuStack.deviceManager.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

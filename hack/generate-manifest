@@ -5,7 +5,7 @@ set -e
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 CONTROLLER_GEN="${CONTROLLER_GEN:-controller-gen}"
 
-out_dir="${ROOT_DIR}/charts/llmos-gpu-stack/templates/crds"
+out_dir="${ROOT_DIR}/charts/llmos-gpu-stack-crd/templates"
 mkdir -p "${out_dir}"
 
 # Clean up previous CRD manifest YAMLs
