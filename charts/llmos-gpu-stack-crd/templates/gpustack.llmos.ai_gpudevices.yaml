@@ -11,14 +11,12 @@ spec:
     kind: GPUDevice
     listKind: GPUDeviceList
     plural: gpudevices
-    shortNames:
-    - gpu
     singular: gpudevice
   scope: Cluster
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.nodeName
-      name: NODE NAME
+      name: NODE_NAME
       type: string
     - jsonPath: .status.vendor
       name: VENDOR

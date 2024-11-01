@@ -14,7 +14,7 @@ func main() {
 	ctx := signals.SetupSignalHandler()
 	cmd.SilenceErrors = true
 	if err := cmd.ExecuteContext(ctx); err != nil {
-		fmt.Errorf("%s", err)
+		fmt.Println(fmt.Errorf("%s", err))
 		os.Exit(1)
 	}
 	os.Exit(0)

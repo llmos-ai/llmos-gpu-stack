@@ -87,6 +87,7 @@ vet: ## Run go vet against code.
 .PHONY: lint
 lint: golangci-lint ## Run golangci-lint linter & yamllint
 	$(GOLANGCI_LINT) run
+	$(HELM) lint ./charts/llmos-gpu-stack
 
 .PHONY: lint-fix
 lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
@@ -104,10 +105,25 @@ test-e2e:
 
 ##@ Build
 .PHONY: build
-build: lint test  ## Run all llmos-gpu-stack builds
+build: lint test build-gpu-stack  ## Run all llmos-gpu-stack builds
 
 .PHONY: release
-release: lint test ## Run all llmos-gpu-stack builds
+release: lint test release-gpu-stack ## Run all llmos-gpu-stack builds
+
+.PHONY: build-gpu-stack
+build-gpu-stack: ## Build llmos-gpu-stack using goreleaser with local mode.
+	EXPORT_ENV=true source ./scripts/version && \
+	goreleaser release --snapshot --clean $(VERBOSE)
+
+.PHONY: release-gpu-stack
+release-gpu-stack: ## release llmos-gpu-stack using goreleaser.
+	EXPORT_ENV=true source ./scripts/version && \
+
+
+.PHONY: gpu-stack-manifest
+gpu-stack-manifest: ## Build & push llmos-gpu-stack manifest image
+	./scripts/manifest-images llmos-gpu-stack
+	goreleaser release --clean
 
 ##@ Chart
 .PHONY: install
@@ -120,8 +136,12 @@ uninstall: ## Uninstall llmos-gpu-stack chart from the K8s cluster.
 	$(HELM) uninstall -n llmos-system llmos-gpu-stack
 
 .PHONY: install-crds
-install-crds: ## Apply llmos-gpu-stack CRDs to the K8s cluster.
-	$(KUBECTL) apply -f charts/llmos-gpu-stack/templates/crds/
+install-crds: manifests ## Install CRDs into your k8s cluster.
+	$(HELM) upgrade --install --create-namespace -n llmos-system llmos-gpu-stack-crd charts/llmos-gpu-stack-crd
+
+.PHONY: uninstall-crds
+uninstall-crds: ## Uninstall CRDs from your k8s cluster.
+	$(HELM) uninstall -n llmos-system llmos-gpu-stack-crd
 
 .PHONY: helm-dep
 helm-dep: ## update llmos-gpu-stack dependency charts.

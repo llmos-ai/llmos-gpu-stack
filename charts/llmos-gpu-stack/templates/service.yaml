@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "device-manager.fullname" . }}
+  labels:
+    {{- include "device-manager.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.gpuStack.deviceManager.service.type }}
+  ports:
+    - port: {{ .Values.gpuStack.deviceManager.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.gpuStack.deviceManager.service.profilePort }}
+      targetPort: http
+      protocol: TCP
+      name: profile
+  selector:
+    {{- include "device-manager.selectorLabels" . | nindent 4 }}

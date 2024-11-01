@@ -22,7 +22,7 @@ func Start(ctx context.Context, kubeConfig string, threadiness int) error {
 			logrus.Fatal(err)
 		}
 		if err = mgmt.Start(threadiness); err != nil {
-			logrus.Fatal("error starting controllers: %s", err)
+			logrus.Fatal(err)
 		}
 	})
 
