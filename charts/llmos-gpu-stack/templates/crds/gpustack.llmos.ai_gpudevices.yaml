@@ -1,0 +1,166 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    {}
+  name: gpudevices.gpustack.llmos.ai
+spec:
+  group: gpustack.llmos.ai
+  names:
+    kind: GPUDevice
+    listKind: GPUDeviceList
+    plural: gpudevices
+    shortNames:
+    - gpu
+    singular: gpudevice
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.nodeName
+      name: NODE NAME
+      type: string
+    - jsonPath: .status.vendor
+      name: VENDOR
+      type: string
+    - jsonPath: .status.devName
+      name: DEVICE_NAME
+      type: string
+    - jsonPath: .status.vram
+      name: VRAM
+      type: integer
+    - jsonPath: .status.state
+      name: State
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: GPUDevice describes a GPU accelerator device
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: GPUDeviceSpec defines the desired state of GPUDevice
+            type: object
+          status:
+            description: GPUDeviceStatus defines the observed state of GPUDevice
+            properties:
+              conditions:
+                items:
+                  properties:
+                    lastTransitionTime:
+                      description: Last time the condition transitioned from one status
+                        to another.
+                      type: string
+                    lastUpdateTime:
+                      description: The last time this condition was updated.
+                      type: string
+                    message:
+                      description: Human-readable message indicating details about
+                        last transition
+                      type: string
+                    reason:
+                      description: The reason for the condition's last transition.
+                      type: string
+                    status:
+                      description: Status of the condition, one of True, False, Unknown.
+                      type: string
+                    type:
+                      description: Type of the condition.
+                      type: string
+                  required:
+                  - status
+                  - type
+                  type: object
+                type: array
+              cudaCores:
+                description: CUDACores is the number of CUDA cores available on the
+                  GPU device
+                format: int32
+                type: integer
+              devCores:
+                description: DevCores is the total percentage number of cores available
+                  on the GPU
+                format: int32
+                type: integer
+              devName:
+                description: DevName is the name of the GPU device
+                type: string
+              health:
+                description: Health indicates whether the GPU device is healthy
+                type: boolean
+              maxCount:
+                description: MaxCount is the maximum number of splitter instances
+                  that can be created from this GPU
+                format: int32
+                type: integer
+              nodeName:
+                description: NodeName is the name of the node where the GPU device
+                  is located
+                type: string
+              numa:
+                description: Numa is the NUMA node where the GPU device is located
+                type: integer
+              pods:
+                description: Pods is the list of pods that are using this GPU device
+                items:
+                  properties:
+                    coresReq:
+                      description: CoresReq is the number of cores requested by the
+                        pod
+                      format: int32
+                      type: integer
+                    memPercentageReq:
+                      description: MemPercentageReq is the percentage of memory requested
+                        by the pod
+                      format: int32
+                      type: integer
+                    memReq:
+                      description: MemReq is the amount of memory requested by the
+                        pod
+                      format: int32
+                      type: integer
+                    name:
+                      description: Name is the namespace:name of the pod, e.g. "default:my-pod"
+                      type: string
+                  required:
+                  - name
+                  type: object
+                type: array
+              state:
+                description: State describes the current state of the GPU device
+                type: string
+              uuid:
+                description: UUID is the GPU Device UUID
+                type: string
+              vendor:
+                description: Vendor is the vendor name of the GPU device
+                type: string
+              vram:
+                description: VRAM is the amount of video RAM in MB
+                format: int32
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
