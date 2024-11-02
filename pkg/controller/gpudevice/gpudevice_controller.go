@@ -64,7 +64,6 @@ func Register(_ context.Context, mgmt *config.Management) error {
 	}
 
 	pods.OnChange(mgmt.Ctx, gpuDevicePodOnChange, podHandler.onGpuPodChange)
-	pods.OnRemove(mgmt.Ctx, gpuDevicePodOnDelete, podHandler.onGpuPodDelete)
 
 	return nil
 }
@@ -99,7 +98,7 @@ func (h *gpuHandler) gpuDeviceOnChange(_ string, gpuDevice *gpustackv1.GPUDevice
 		deviceList = append(deviceList, devices...)
 	}
 
-	var podList []gpustackv1.GPUPod
+	var podList = make([]gpustackv1.GPUPod, 0)
 
 	for _, device := range deviceList {
 		podList = append(podList, gpustackv1.GPUPod{

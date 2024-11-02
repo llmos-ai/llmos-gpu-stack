@@ -8,5 +8,5 @@ dependencies:
 - name: volcano
   repository: https://volcano-sh.github.io/helm-charts
   version: 1.10.0
-digest: sha256:c9009cc29206b14b44b6bfb7c9d9639718ea12a9580ed33c4c9e26864a7e6517
-generated: "2024-11-01T20:26:54.838922+08:00"
+digest: sha256:7effdee04276b7f43ee85ce57af327d3452003df72d7c0c3ba5fbcc6b02b674b
+generated: "2024-11-02T23:19:37.008028+08:00"

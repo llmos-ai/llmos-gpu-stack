@@ -21,8 +21,13 @@ type podHandler struct {
 }
 
 func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, error) {
-	if pod == nil || pod.DeletionTimestamp != nil {
+	if pod == nil {
 		return nil, nil
+	}
+
+	// Note: handle pod deletion in updates to avoid normal pod deletion finalizer
+	if pod.DeletionTimestamp != nil {
+		return h.onGpuPodDelete(pod)
 	}
 
 	if !hasVGPUDevice(pod) {
@@ -38,7 +43,7 @@ func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, err
 		return pod, nil
 	}
 
-	if err = h.syncGPUDeviceStatus(devices, pod); err != nil {
+	if err = h.syncGPUDeviceStatus(devices); err != nil {
 		return pod, nil
 	}
 
@@ -59,7 +64,7 @@ func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, err
 	return pod, nil
 }
 
-func (h *podHandler) syncGPUDeviceStatus(devices []GPUDevice, pod *corev1.Pod) error {
+func (h *podHandler) syncGPUDeviceStatus(devices []GPUDevice) error {
 	for _, dev := range devices {
 		deviceName := getDeviceName(dev.UUID)
 		_, err := h.gpuDeviceCache.Get(deviceName)
@@ -102,7 +107,7 @@ func getPodAllocatedDevices(pod *corev1.Pod) ([]GPUDevice, error) {
 	return gpuDevices, nil
 }
 
-func (h *podHandler) onGpuPodDelete(_ string, pod *corev1.Pod) (*corev1.Pod, error) {
+func (h *podHandler) onGpuPodDelete(pod *corev1.Pod) (*corev1.Pod, error) {
 	if pod == nil || pod.DeletionTimestamp == nil || !hasVGPUDevice(pod) {
 		return nil, nil
 	}

@@ -102,13 +102,7 @@ hami:
   enabled: true
   scheduler:
     nodeLabelSelector:
-      gpustack.llmos.ai/gpu-node: "true"
-      gpustack.llmos.ai/iluvatar-node: "true"
-      gpustack.llmos.ai/mlu-node: "true"
-      gpustack.llmos.ai/mtrheads-node: "true"
-      gpustack.llmos.ai/ascend910a-node: "true"
-      gpustack.llmos.ai/ascend910b-node: "true"
-      gpustack.llmos.ai/ascend310p-node: "true"
+      llmos.ai/gpu-node: "true"
     defaultSchedulerPolicy:
       nodeSchedulerPolicy: binpack
       gpuSchedulerPolicy: spread

@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "device-manager.fullname" . }}:{{ .Values.gpuStack.deviceManager.service.port }}']
+      args: ['-qO-', '{{ include "device-manager.fullname" . }}:{{ .Values.gpuStack.deviceManager.service.port }}']
   restartPolicy: Never

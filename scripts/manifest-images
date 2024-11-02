@@ -22,11 +22,11 @@ else
 fi
 
 # Get the list of images to push
-PUSH_IMAGES=$( docker images --format "{{.Repository}}:{{.Tag}}" | grep "/${IMAGE_REPO}:${VERSION}" )
+PUSH_IMAGES=$( docker images --format "{{.Repository}}:{{.Tag}}" | grep "${REGISTRY}/${IMAGE_REPO}:${TAG}" )
 
 # Check if any images matched
 if [[ -z "$PUSH_IMAGES" ]]; then
-    echo "Error: no images found for repository ${IMAGE_REPO} with version ${VERSION}"
+    echo "Error: no images found for repository ${IMAGE_REPO} with version ${TAG}"
     exit 1
 fi
 
@@ -36,11 +36,12 @@ for i in ${PUSH_IMAGES}; do
 done
 
 # Create and push the manifest image
-MANIFEST_IMAGE="${REGISTRY}/${IMAGE_REPO}:${VERSION}"
+MANIFEST_IMAGE="${REGISTRY}/${IMAGE_REPO}:${TAG}"
 echo "Creating manifest image ${MANIFEST_IMAGE}"
 
 # Create the manifest
-docker manifest create --amend "${MANIFEST_IMAGE}" ${PUSH_IMAGES}
+echo "manifest create ${MANIFEST_IMAGE}" && echo "${PUSH_IMAGES}"
+docker manifest create --amend "${REGISTRY}/${IMAGE_REPO}:${TAG}" ${PUSH_IMAGES}
 docker manifest push "${MANIFEST_IMAGE}"
 
 echo "Pushed manifest image ${MANIFEST_IMAGE}"

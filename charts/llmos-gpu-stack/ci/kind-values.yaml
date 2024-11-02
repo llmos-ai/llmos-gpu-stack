@@ -1,0 +1,6 @@
+hami:
+  enabled: false
+gpuOperator:
+  enabled: false
+volcano:
+  enabled: false

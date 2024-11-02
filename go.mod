@@ -1,6 +1,6 @@
 module github.com/llmos-ai/llmos-gpu-stack
 
-go 1.23.2
+go 1.22.8
 
 replace (
 	github.com/Project-HAMi/HAMi => github.com/Project-HAMi/HAMi v0.0.0-20241025012619-66cabbfac0ae

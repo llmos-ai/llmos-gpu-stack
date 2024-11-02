@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/llmos-ai/llmos-gpu-stack/pkg/config"
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/version"
 )
 
 const gpuStackLeaseName = "llmos-gpu-stack-device-manager-leader"
@@ -47,6 +48,13 @@ func (c *GPUDeviceController) Start() error {
 
 func (c *GPUDeviceController) listenAndServe() {
 	h := server.New(server.WithHostPorts(c.HttpAddress))
+
+	h.GET("/", func(ctx context.Context, c *app.RequestContext) {
+		c.JSON(consts.StatusOK, utils.H{
+			"name":    "llmos-gpu-stack device-manager",
+			"version": version.GetFriendlyVersion(),
+		})
+	})
 
 	h.GET("/healthz", func(ctx context.Context, c *app.RequestContext) {
 		c.JSON(consts.StatusOK, utils.H{"message": "ok"})

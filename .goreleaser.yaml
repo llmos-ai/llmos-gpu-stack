@@ -42,7 +42,7 @@ builds:
       - -X "github.com/llmos-ai/llmos-gpu-stack/pkg/version.Commit={{ .Env.COMMIT }}"
 
 changelog:
-  use: github
+  use: git
   sort: asc
   filters:
     exclude:

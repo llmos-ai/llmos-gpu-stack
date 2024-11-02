@@ -91,7 +91,7 @@ Device manager labels
 */}}
 {{- define "device-manager.labels" -}}
 helm.sh/chart: {{ include "llmos-gpu-stack.chart" . }}
-{{ include "llmos-gpu-stack.selectorLabels" . }}
+{{ include "device-manager.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
