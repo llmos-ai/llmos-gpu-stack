@@ -9,9 +9,6 @@ issues:
   # restore some of the defaults
   # (fill in the rest as needed)
   exclude-rules:
-    - path: /
-      linters:
-        - typecheck
     - path: "pkg/generated/*"
       linters:
         - errcheck

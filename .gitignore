@@ -31,3 +31,4 @@ tmp
 dist
 .DS_Store
 .tmp-earthly-out
+.cr-release-packages

@@ -24,9 +24,11 @@ type GPUDevice struct {
 }
 
 const (
-	GPUStackPrefix      = "gpustack.llmos.ai"
-	LabelGPUNodeRoleKey = GPUStackPrefix + "/gpu-node"
-	LabelNodeNameKey    = GPUStackPrefix + "/node-name"
+	LLMOSPrefix         = "llmos.ai"
+	LabelGPUNodeRoleKey = LLMOSPrefix + "/gpu-node"
+
+	GPUStackPrefix   = "gpustack.llmos.ai"
+	LabelNodeNameKey = GPUStackPrefix + "/node-name"
 
 	HamiNodeHandshakeAnnotation = "hami.io/node-handshake"
 )

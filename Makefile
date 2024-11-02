@@ -4,7 +4,7 @@ IMG_REPO ?= ${REGISTRY}/llmos-gpu-stack
 WEBHOOK_IMG_REPO ?= ${REGISTRY}/llmos-gpu-stack-webhook
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.30.5
+ENVTEST_K8S_VERSION = 1.30.3
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -36,7 +36,7 @@ HELM ?= $(GLOBALBIN)/helm
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
-ENVTEST_VERSION ?= release-0.17
+ENVTEST_VERSION ?= release-0.18
 GOLANGCI_LINT_VERSION ?= v1.54.2
 
 # Setting SHELL to bash allows bash commands to be executed by recipes.
@@ -95,11 +95,13 @@ lint-fix: golangci-lint ## Run golangci-lint linter and perform fixes
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
+	./hack/check-kubeconfig
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
 # Utilize Kind or modify the e2e tests to load the image locally, enabling compatibility with other vendors.
 .PHONY: test-e2e  # Run the e2e tests against a Kind k8s instance that is spun up.
 test-e2e:
+	./hack/check-kubeconfig
 	#go test ./test/e2e/ -v -ginkgo.v
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test $$(go list ./... | grep -v /e2e) -coverprofile cover.out
 
@@ -118,12 +120,15 @@ build-gpu-stack: ## Build llmos-gpu-stack using goreleaser with local mode.
 .PHONY: release-gpu-stack
 release-gpu-stack: ## release llmos-gpu-stack using goreleaser.
 	EXPORT_ENV=true source ./scripts/version && \
-
+	goreleaser release --clean
 
 .PHONY: gpu-stack-manifest
 gpu-stack-manifest: ## Build & push llmos-gpu-stack manifest image
 	./scripts/manifest-images llmos-gpu-stack
-	goreleaser release --clean
+
+.PHONY: package-charts
+package-charts: ## Run ci script
+	bash ./scripts/chart/ci
 
 ##@ Chart
 .PHONY: install
@@ -146,6 +151,7 @@ uninstall-crds: ## Uninstall CRDs from your k8s cluster.
 .PHONY: helm-dep
 helm-dep: ## update llmos-gpu-stack dependency charts.
 	$(HELM) dep update charts/llmos-gpu-stack
+	$(HELM) dep build charts/llmos-gpu-stack
 
 ifndef ignore-not-found
   ignore-not-found = false

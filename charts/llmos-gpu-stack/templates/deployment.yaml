@@ -8,7 +8,7 @@ spec:
   replicas: {{ .Values.gpuStack.deviceManager.replicas }}
   selector:
     matchLabels:
-      {{- include "llmos-gpu-stack.selectorLabels" . | nindent 6 }}
+      {{- include "device-manager.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.gpuStack.deviceManager.podAnnotations }}

@@ -118,7 +118,8 @@ func (h *nodeHandler) cleanNodeNotReadyDevices(node *corev1.Node, gpuDevices []*
 	}
 	return nil
 }
-func (h *nodeHandler) reconcileNodeGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) (*gpustackv1.GPUDevice, error) {
+func (h *nodeHandler) reconcileNodeGPUDevice(device *hapi.DeviceInfo,
+	node *corev1.Node) (*gpustackv1.GPUDevice, error) {
 	gpuDevice := constructGPUDevice(device, node)
 	foundDevice, err := h.gpuDeviceCache.Get(gpuDevice.Name)
 	if err != nil && !errors.IsNotFound(err) {
@@ -178,7 +179,8 @@ func (h *nodeHandler) nodeGPUDevicesOnRemove(_ string, node *corev1.Node) (*core
 	return node, nil
 }
 
-func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[string]string, hasGPUDevices bool) (*corev1.Node, error) {
+func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[string]string,
+	hasGPUDevices bool) (*corev1.Node, error) {
 	toUpdate := node.DeepCopy()
 	toUpdate.Labels[LabelGPUNodeRoleKey] = strconv.FormatBool(hasGPUDevices)
 

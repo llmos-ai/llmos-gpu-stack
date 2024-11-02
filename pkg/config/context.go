@@ -8,17 +8,12 @@ import (
 	appsv1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/apps"
 	corev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core"
 	"github.com/rancher/wrangler/v3/pkg/generic"
-	"github.com/rancher/wrangler/v3/pkg/kubeconfig"
 	"github.com/rancher/wrangler/v3/pkg/ratelimit"
 	"github.com/rancher/wrangler/v3/pkg/start"
 	"k8s.io/client-go/kubernetes"
 
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai"
 )
-
-type Options struct {
-	Threadiness int
-}
 
 type Management struct {
 	Ctx        context.Context
@@ -40,7 +35,11 @@ func NewManagementContext(ctx context.Context, kubeConfig string) (*Management, 
 		GPUDevices: hdevice.GetDevices(),
 	}
 
-	clientConfig := kubeconfig.GetNonInteractiveClientConfig(kubeConfig)
+	clientConfig, err := GetConfig(kubeConfig)
+	if err != nil {
+		return nil, err
+	}
+
 	client, err := clientConfig.ClientConfig()
 	if err != nil {
 		return nil, err
