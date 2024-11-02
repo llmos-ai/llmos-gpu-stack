@@ -10,7 +10,7 @@ import (
 	"github.com/llmos-ai/llmos/utils/cli"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	klog "k8s.io/klog/v2"
+	"k8s.io/klog/v2"
 
 	"github.com/llmos-ai/llmos-gpu-stack/cmd/devicemanager"
 	"github.com/llmos-ai/llmos-gpu-stack/cmd/version"
