@@ -86,6 +86,10 @@ func getPodDeviceNameLabelKey(deviceId string) string {
 	return fmt.Sprintf("%s/%s", GPUStackPrefix, getDeviceName(deviceId))
 }
 
+func getNodeDeviceNameLabelKey(deviceCommonName string) string {
+	return fmt.Sprintf("%s/%s-node", GPUStackPrefix, strings.ToLower(deviceCommonName))
+}
+
 func hasVGPUDevice(pod *corev1.Pod) bool {
 	return pod.Annotations[hutil.AssignedNodeAnnotations] != ""
 }

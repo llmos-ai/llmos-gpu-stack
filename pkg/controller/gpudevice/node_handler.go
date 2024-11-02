@@ -44,16 +44,17 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 	}
 
 	logrus.Debugf("node %s has changed, check GPU devices", node.Name)
-	gpuDevices := make([]*gpustackv1.GPUDevice, 0)
+	var gpuDevices = make([]*gpustackv1.GPUDevice, 0)
+	var gpuDeviceLabels = make(map[string]string)
+
 	if !h.hasGPUDevices(node) {
 		logrus.Debugf("node %s has no gpu devices, check if need to clean up old device obj", node.Name)
 		if err := h.cleanNodeNotReadyDevices(node, gpuDevices); err != nil {
 			return node, err
 		}
 
-		return h.updateGPUNodeLabel(node, false)
+		return h.updateGPUNodeLabel(node, gpuDeviceLabels, false)
 	}
-
 	// Reconcile all device types
 	for _, dt := range h.devices {
 		nodeDevices, err := dt.GetNodeDevices(*node)
@@ -62,6 +63,9 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 		} else if err != nil {
 			return node, fmt.Errorf("get node devices error: %v", err)
 		}
+
+		hasDevices := strconv.FormatBool(len(nodeDevices) > 0)
+		gpuDeviceLabels[getNodeDeviceNameLabelKey(dt.CommonWord())] = hasDevices
 
 		for _, device := range nodeDevices {
 			gpuDevice, err := h.reconcileNodeGPUDevice(device, node)
@@ -76,7 +80,7 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 		return node, err
 	}
 
-	return h.updateGPUNodeLabel(node, true)
+	return h.updateGPUNodeLabel(node, gpuDeviceLabels, true)
 }
 
 func (h *nodeHandler) hasGPUDevices(node *corev1.Node) bool {
@@ -174,10 +178,16 @@ func (h *nodeHandler) nodeGPUDevicesOnRemove(_ string, node *corev1.Node) (*core
 	return node, nil
 }
 
-func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, hasGPUDevices bool) (*corev1.Node, error) {
+func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[string]string, hasGPUDevices bool) (*corev1.Node, error) {
 	toUpdate := node.DeepCopy()
 	toUpdate.Labels[LabelGPUNodeRoleKey] = strconv.FormatBool(hasGPUDevices)
-	if node.Labels[LabelGPUNodeRoleKey] != toUpdate.Labels[LabelGPUNodeRoleKey] {
+
+	for k, v := range deviceLabels {
+		logrus.Debugf("updating gpu node %s labels %s:%s", node.Name, k, v)
+		toUpdate.Labels[k] = v
+	}
+
+	if !reflect.DeepEqual(toUpdate.Labels, node.Labels) {
 		return h.nodeClient.Update(toUpdate)
 	}
 

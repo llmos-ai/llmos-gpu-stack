@@ -16,6 +16,7 @@ import (
 type DeviceManager struct {
 	Kubeconfig      string `usage:"Path to kubeconfig file" short:"k" env:"KUBECONFIG"`
 	Namespace       string `usage:"Deployment namespace" default:"llmos-system" short:"n" env:"LLMOS_NAMESPACE"`
+	HttpAddress     string `usage:"Address to listen for HTTP requests" default:"0.0.0.0:8080" short:"a" env:"LLMOS_HTTP_ADDRESS"`
 	ProfilerAddress string `usage:"Address to listen for profiling" default:"0.0.0.0:6060" short:"p" env:"LLMOS_PROFILER_ADDRESS"`
 	Threadiness     int    `usage:"Number of threads to run" default:"2" short:"w" env:"LLMOS_THREADINESS"`
 }
@@ -28,7 +29,13 @@ func NewManager() *cobra.Command {
 
 func (dm *DeviceManager) Run(cmd *cobra.Command, _ []string) error {
 	initProfiling(dm)
-	return controller.Start(cmd.Context(), dm.Kubeconfig, dm.Threadiness)
+	gc := controller.GPUDeviceController{
+		Context:     cmd.Context(),
+		Kubeconfig:  dm.Kubeconfig,
+		HttpAddress: dm.HttpAddress,
+		Threadiness: dm.Threadiness,
+	}
+	return gc.Start()
 }
 
 func initProfiling(dm *DeviceManager) {
