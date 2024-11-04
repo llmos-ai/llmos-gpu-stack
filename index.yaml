@@ -1,3 +1,50 @@
 apiVersion: v1
-entries: {}
-generated: "2024-11-04T11:17:04.086048+08:00"
+entries:
+  llmos-gpu-stack:
+  - apiVersion: v2
+    appVersion: v0.1.0-rc1
+    created: "2024-11-04T03:42:09.225505146Z"
+    dependencies:
+    - condition: gpuOperator.enabled
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      tags:
+      - gpu-operator
+      - nvidia
+      version: v24.6.2
+    - condition: hami.enabled
+      name: hami
+      repository: https://project-hami.github.io/HAMi
+      tags:
+      - hami
+      - vGPU manager
+      version: 2.4.0
+    - condition: volcano.enabled
+      name: volcano
+      repository: https://volcano-sh.github.io/helm-charts
+      tags:
+      - gang-scheduling
+      version: 1.10.0
+    description: LLMOS GPU Stack helm chart
+    digest: db93b97b364e04675781b039435f3a9302b2340e386bf9c05e81417757566d36
+    maintainers:
+    - name: llmos-ai
+    name: llmos-gpu-stack
+    type: application
+    urls:
+    - https://github.com/llmos-ai/llmos-gpu-stack/releases/download/llmos-gpu-stack-0.1.0-rc1/llmos-gpu-stack-0.1.0-rc1.tgz
+    version: 0.1.0-rc1
+  llmos-gpu-stack-crd:
+  - apiVersion: v2
+    appVersion: v0.1.0-rc1
+    created: "2024-11-04T03:42:09.361328368Z"
+    description: A Helm chart for installing llmos-gpu-stack CRDs
+    digest: 8f638138cf73d6e536b45d52de3be363d98f427fbd39ed2fff035107f220737e
+    maintainers:
+    - name: llmos-ai
+    name: llmos-gpu-stack-crd
+    type: application
+    urls:
+    - https://github.com/llmos-ai/llmos-gpu-stack/releases/download/llmos-gpu-stack-crd-0.1.0-rc1/llmos-gpu-stack-crd-0.1.0-rc1.tgz
+    version: 0.1.0-rc1
+generated: "2024-11-04T03:42:09.361333648Z"
