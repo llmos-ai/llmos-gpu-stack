@@ -1,4 +1,4 @@
-name: release
+name: main-release
 
 concurrency:
   group: main-release
