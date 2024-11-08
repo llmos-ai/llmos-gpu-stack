@@ -87,6 +87,8 @@ gpuOperator:
 gpu-operator:
   driver:
     enabled: false
+  devicePlugin:
+    enabled: false
   toolkit:
     env:
       - name: CONTAINERD_CONFIG
