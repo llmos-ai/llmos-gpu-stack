@@ -8,6 +8,7 @@ import (
 
 	hapi "github.com/Project-HAMi/HAMi/pkg/api"
 	"github.com/Project-HAMi/HAMi/pkg/device"
+	hvidia "github.com/Project-HAMi/HAMi/pkg/device/nvidia"
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -187,6 +188,14 @@ func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[str
 	for k, v := range deviceLabels {
 		logrus.Debugf("updating gpu node %s labels %s:%s", node.Name, k, v)
 		toUpdate.Labels[k] = v
+		// append nvidia default node selector label
+		if k == getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord) {
+			if v == "true" {
+				toUpdate.Labels["gpu"] = "on"
+			} else {
+				toUpdate.Labels["gpu"] = "off"
+			}
+		}
 	}
 
 	if !reflect.DeepEqual(toUpdate.Labels, node.Labels) {
