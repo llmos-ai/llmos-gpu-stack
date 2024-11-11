@@ -45,3 +45,8 @@ dependencies:
     condition: volcano.enabled
     tags:
       - gang-scheduling
+  - name: crds
+    version: 0.1.0
+    condition: crds.enabled
+    tags:
+      - crds

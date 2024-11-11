@@ -17,13 +17,7 @@ LLMOS-GPU-Stack is a collection of tools that provides vGPU and Multi-accelerato
 ### Installation
 To deploy the `llmos-gpu-stack` on your k8s cluster, you can use the following commands:
 
-**Install the CRDs into the cluster:**
-
-```sh
-$ make install-crds
-```
-
-**Deploy the llmos-gpu-stack to the cluster:**
+**Clone the Repo and install the llmos-gpu-stack & dependency charts to the cluster:**
 
 ```sh
 $ make install
@@ -33,10 +27,13 @@ $ make install
 **Delete the CRDs and llmos-gpu-stack from the cluster:**
 
 ```sh
-$ make uninstall-crds && make uninstall
+$ make uninstall
 ```
 
 ## Helm Repo
+
+If you want to use the Helm chart directly, you can add the repo and search for the chart:
+
 ```shell
 helm repo add llmos-gpu-stack https://llmos-gpu-stack-charts.1block.ai
 helm repo update llmos-gpu-stack

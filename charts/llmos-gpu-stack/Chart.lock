@@ -8,5 +8,8 @@ dependencies:
 - name: volcano
   repository: https://volcano-sh.github.io/helm-charts
   version: 1.10.0
-digest: sha256:7effdee04276b7f43ee85ce57af327d3452003df72d7c0c3ba5fbcc6b02b674b
-generated: "2024-11-02T23:19:37.008028+08:00"
+- name: crds
+  repository: ""
+  version: 0.1.0
+digest: sha256:965a772133af43abbcdf2d87d2b04053bedd3565b8d38f3f9a66dfc188cd61d6
+generated: "2024-11-11T10:00:17.976923+08:00"

@@ -82,6 +82,9 @@ gpuStack:
         port: http
         scheme: HTTP
 
+crds:
+  enabled: true
+
 gpuOperator:
   enabled: true
 gpu-operator:
@@ -89,6 +92,10 @@ gpu-operator:
     enabled: false
   devicePlugin:
     enabled: false
+  dcgmExporter:
+    enabled: true
+    serviceMonitor:
+      enabled: false
   toolkit:
     env:
       - name: CONTAINERD_CONFIG
