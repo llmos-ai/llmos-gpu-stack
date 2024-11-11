@@ -140,14 +140,6 @@ install: ## Install llmos-gpu-stack chart into the K8s cluster.
 uninstall: ## Uninstall llmos-gpu-stack chart from the K8s cluster.
 	$(HELM) uninstall -n llmos-system llmos-gpu-stack
 
-.PHONY: install-crds
-install-crds: manifests ## Install CRDs into your k8s cluster.
-	$(HELM) upgrade --install --create-namespace -n llmos-system llmos-gpu-stack-crd charts/llmos-gpu-stack-crd
-
-.PHONY: uninstall-crds
-uninstall-crds: ## Uninstall CRDs from your k8s cluster.
-	$(HELM) uninstall -n llmos-system llmos-gpu-stack-crd
-
 .PHONY: helm-dep
 helm-dep: ## update llmos-gpu-stack dependency charts.
 	$(HELM) dep update charts/llmos-gpu-stack

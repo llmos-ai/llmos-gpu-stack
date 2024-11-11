@@ -59,17 +59,13 @@ function updateImageConfig() {
 }
 
 function patchChartVersion() {
-    sed -i -e "s/0.1.0-dev/${CHART_VERSION}/g" "${gpu_stack_crd_chart_path}/Chart.yaml"
-    sed -i -e "s/0.1.0-app.dev/${APP_VERSION}/g" "${gpu_stack_crd_chart_path}/Chart.yaml"
     sed -i -e "s/0.1.0-dev/${CHART_VERSION}/g" "${gpu_stack_chart_path}/Chart.yaml"
     sed -i -e "s/0.1.0-app.dev/${APP_VERSION}/g" "${gpu_stack_chart_path}/Chart.yaml"
 
-    rm -f "${gpu_stack_crd_chart_path}/Chart.yaml-e"
     rm -f "${gpu_stack_chart_path}/Chart.yaml-e"
 }
 
 # package llmos-gpu-stack chart
-gpu_stack_crd_chart_path=${CHART_DIST_DIR}/llmos-gpu-stack-crd
 gpu_stack_chart_path=${CHART_DIST_DIR}/llmos-gpu-stack
 
 
@@ -79,10 +75,8 @@ cd "${TOP_DIR}"
 
 ./scripts/chart/check "${LLMOS_CHARTS_DIR}"
 
-helm lint "${gpu_stack_crd_chart_path}"
 helm lint "${gpu_stack_chart_path}"
 
-helm package ${gpu_stack_crd_chart_path} -d ${CHART_DIST_DIR} || true
 helm package ${gpu_stack_chart_path} -d ${CHART_DIST_DIR} || true
 
 #echo "Building new helm chart ${CHART_REPO} repo index:"
@@ -92,7 +86,6 @@ helm package ${gpu_stack_chart_path} -d ${CHART_DIST_DIR} || true
 
 # Clean up the build
 if [[ "$CLEAN_UP_CHARTS" == "true" ]]; then
-  rm -rf "${gpu_stack_crd_chart_path}" "${gpu_stack_chart_path}"
   rm -rf "${CHART_DIST_DIR}/system-charts"
 fi
 
