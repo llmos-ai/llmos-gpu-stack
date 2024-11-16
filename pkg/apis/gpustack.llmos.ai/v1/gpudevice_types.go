@@ -18,11 +18,11 @@ var (
 // +kubebuilder:object:root=true
 // +kubebuilder:resource:scope=Cluster
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="NODE_NAME",type="string",JSONPath=".status.nodeName"
-// +kubebuilder:printcolumn:name="VENDOR",type="string",JSONPath=".status.vendor"
-// +kubebuilder:printcolumn:name="DEVICE_NAME",type="string",JSONPath=".status.devName"
-// +kubebuilder:printcolumn:name="VRAM",type="integer",JSONPath=".status.vram"
-// +kubebuilder:printcolumn:name="State",type="string",JSONPath=".status.state"
+// +kubebuilder:printcolumn:name="Node Name",type="string",JSONPath=".status.nodeName"
+// +kubebuilder:printcolumn:name="Vendor",type="string",JSONPath=".status.vendor"
+// +kubebuilder:printcolumn:name="Device Name",type="string",JSONPath=".status.devName"
+// +kubebuilder:printcolumn:name="Vram",type="integer",JSONPath=".status.vram"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
 // GPUDevice describes a GPU accelerator device
@@ -43,6 +43,8 @@ type GPUDeviceStatus struct {
 	Conditions []common.Condition `json:"conditions,omitempty"`
 	// NodeName is the name of the node where the GPU device is located
 	NodeName string `json:"nodeName,omitempty"`
+	// InternalIP is the internal IP address of the node where the GPU device is located
+	InternalIP string `json:"internalIP,omitempty"`
 	// GPUDeviceInfo is the information of the GPU device
 	GPUDeviceInfo `json:",inline"`
 	// Pods is the list of pods that are using this GPU device
@@ -54,6 +56,8 @@ type GPUDeviceStatus struct {
 type GPUDeviceInfo struct {
 	// UUID is the GPU Device UUID
 	UUID string `json:"uuid,omitempty"`
+	// Index is the index of the GPU device
+	Index *int `json:"index,omitempty"`
 	// Vendor is the vendor name of the GPU device
 	Vendor string `json:"vendor,omitempty"`
 	// DevName is the name of the GPU device
