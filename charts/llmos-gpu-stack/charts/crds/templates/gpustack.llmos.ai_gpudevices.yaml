@@ -16,19 +16,19 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.nodeName
-      name: NODE_NAME
+      name: Node Name
       type: string
     - jsonPath: .status.vendor
-      name: VENDOR
+      name: Vendor
       type: string
     - jsonPath: .status.devName
-      name: DEVICE_NAME
+      name: Device Name
       type: string
     - jsonPath: .status.vram
-      name: VRAM
+      name: Vram
       type: integer
     - jsonPath: .status.state
-      name: State
+      name: Status
       type: string
     - jsonPath: .metadata.creationTimestamp
       name: Age
@@ -105,6 +105,13 @@ spec:
               health:
                 description: Health indicates whether the GPU device is healthy
                 type: boolean
+              index:
+                description: Index is the index of the GPU device
+                type: integer
+              internalIP:
+                description: InternalIP is the internal IP address of the node where
+                  the GPU device is located
+                type: string
               maxCount:
                 description: MaxCount is the maximum number of splitter instances
                   that can be created from this GPU

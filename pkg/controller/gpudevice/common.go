@@ -6,8 +6,10 @@ import (
 
 	hapi "github.com/Project-HAMi/HAMi/pkg/api"
 	hutil "github.com/Project-HAMi/HAMi/pkg/util"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
 	"github.com/llmos-ai/llmos-gpu-stack/pkg/utils"
@@ -34,6 +36,14 @@ const (
 )
 
 func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.GPUDevice {
+	var internalIp string
+	for _, address := range node.Status.Addresses {
+		if address.Type == corev1.NodeInternalIP {
+			internalIp = address.Address
+			break
+		}
+	}
+	logrus.Debugf("construct gpu device %+v for node %s", ParseDeviceInfo(device), node.Name)
 	return &gpustackv1.GPUDevice{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: getDeviceName(device.ID),
@@ -47,6 +57,7 @@ func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.
 		Status: gpustackv1.GPUDeviceStatus{
 			GPUDeviceInfo: ParseDeviceInfo(device),
 			NodeName:      node.Name,
+			InternalIP:    internalIp,
 			State:         getDeviceState(device, node),
 		},
 	}
@@ -55,6 +66,7 @@ func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.
 func ParseDeviceInfo(devInfo *hapi.DeviceInfo) gpustackv1.GPUDeviceInfo {
 	return gpustackv1.GPUDeviceInfo{
 		UUID:     devInfo.ID,
+		Index:    ptr.To(devInfo.Index),
 		Vendor:   devInfo.Type[:strings.IndexByte(devInfo.Type, '-')],
 		DevName:  strings.TrimPrefix(devInfo.Type[strings.IndexByte(devInfo.Type, '-'):], "-"),
 		MaxCount: devInfo.Count,
