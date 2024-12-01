@@ -5,11 +5,8 @@ dependencies:
 - name: hami
   repository: https://project-hami.github.io/HAMi
   version: 2.4.0
-- name: volcano
-  repository: https://volcano-sh.github.io/helm-charts
-  version: 1.10.0
 - name: crds
   repository: ""
   version: 0.1.0
-digest: sha256:965a772133af43abbcdf2d87d2b04053bedd3565b8d38f3f9a66dfc188cd61d6
-generated: "2024-11-11T10:00:17.976923+08:00"
+digest: sha256:515c4cc4d61648309aa176489b22cda20b4fcc9c735017da486f4265eb28a356
+generated: "2024-12-01T14:59:07.58053+08:00"
