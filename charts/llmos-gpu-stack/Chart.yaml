@@ -33,7 +33,7 @@ dependencies:
       - gpu-operator
       - nvidia
   - name: hami
-    version: 2.4.0
+    version: 2.4.1
     condition: hami.enabled
     repository: https://project-hami.github.io/HAMi
     tags:
