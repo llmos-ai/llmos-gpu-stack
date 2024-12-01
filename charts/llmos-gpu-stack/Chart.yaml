@@ -39,12 +39,6 @@ dependencies:
     tags:
       - hami
       - vGPU manager
-  - name: volcano
-    version: 1.10.0
-    repository: https://volcano-sh.github.io/helm-charts
-    condition: volcano.enabled
-    tags:
-      - gang-scheduling
   - name: crds
     version: 0.1.0
     condition: crds.enabled
