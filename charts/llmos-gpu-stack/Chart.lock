@@ -4,9 +4,9 @@ dependencies:
   version: v24.6.2
 - name: hami
   repository: https://project-hami.github.io/HAMi
-  version: 2.4.0
+  version: 2.4.1
 - name: crds
   repository: ""
   version: 0.1.0
-digest: sha256:515c4cc4d61648309aa176489b22cda20b4fcc9c735017da486f4265eb28a356
-generated: "2024-12-01T14:59:07.58053+08:00"
+digest: sha256:98b8050dcee0ce419c449563b3ff31182d82c84eb9d55a52125a6938d7d54a28
+generated: "2024-12-01T15:05:49.243238+08:00"
