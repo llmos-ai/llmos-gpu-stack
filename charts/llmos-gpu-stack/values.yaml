@@ -117,8 +117,7 @@ hami:
       gpuSchedulerPolicy: spread
     kubeScheduler:
       enabled: true
-      image: k8s.gcr.io/kube-scheduler
-      imageTag: "v1.30.5"
+      image: registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler
       imagePullPolicy: IfNotPresent
   devicePlugin:
     runtimeClassName: "nvidia"

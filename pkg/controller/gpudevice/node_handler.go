@@ -17,7 +17,12 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/controller/accelerator"
 	ctlgpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai/v1"
+)
+
+const (
+	strTrue = "true"
 )
 
 type nodeHandler struct {
@@ -42,6 +47,10 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 			logrus.Debugf("node %s devices has not changed, skip updating", node.Name)
 			return nil, nil
 		}
+	}
+
+	if _, err := h.initGPUNodeLabels(node); err != nil {
+		return node, fmt.Errorf("init gpu node labels error: %v", err)
 	}
 
 	logrus.Debugf("node %s has changed, check GPU devices", node.Name)
@@ -203,5 +212,19 @@ func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[str
 	}
 
 	h.nodeDeviceCache.Set(node.Name, NodeDeviceInfo{Annotations: node.Annotations})
+	return node, nil
+}
+
+func (h *nodeHandler) initGPUNodeLabels(node *corev1.Node) (*corev1.Node, error) {
+	if accelerator.NodeHasGPUPresent(node) {
+		if node.Labels[getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord)] == "" {
+			nodeCpy := node.DeepCopy()
+			nodeCpy.Labels[getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord)] = strTrue
+			nodeCpy.Labels["gpu"] = "on"
+			if !reflect.DeepEqual(nodeCpy.Labels, node.Labels) {
+				return h.nodeClient.Update(nodeCpy)
+			}
+		}
+	}
 	return node, nil
 }
