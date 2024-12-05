@@ -15,6 +15,7 @@ global:
 
 priorityClassNames:
   deviceManager: system-node-critical
+  devicePlugin: system-node-critical
 
 gpuStack:
   serviceAccount:
@@ -59,8 +60,6 @@ gpuStack:
     volumeMounts: []
     nodeSelector: {}
     tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
       - effect: NoSchedule
         key: node-role.kubernetes.io/master
         operator: Exists
@@ -107,19 +106,73 @@ gpu-operator:
       - name: CONTAINERD_SET_AS_DEFAULT
         value: "true"
 
-hami:
+volcano:
   enabled: true
-  scheduler:
-    nodeLabelSelector:
-      llmos.ai/gpu-node: "true"
-    defaultSchedulerPolicy:
-      nodeSchedulerPolicy: binpack
-      gpuSchedulerPolicy: spread
-    kubeScheduler:
-      enabled: true
-      image: registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler
-      imagePullPolicy: IfNotPresent
-  devicePlugin:
-    runtimeClassName: "nvidia"
-    nvidianodeSelector:
-      gpustack.llmos.ai/gpu-node: "true"
+  basic:
+    image_pull_policy: IfNotPresent
+    image_tag_version: "v1.10.0"
+  custom:
+    metrics_enable: false
+    admission_enable: true
+    admission_replicas: 1
+    controller_enable: true
+    controller_replicas: 1
+    scheduler_enable: true
+    scheduler_replicas: 1
+    scheduler_config_override: |
+      actions: "enqueue, allocate, backfill"
+      tiers:
+      - plugins:
+        - name: priority
+        - name: gang
+          enablePreemptable: false
+        - name: conformance
+      - plugins:
+        - name: overcommit
+        - name: drf
+          enablePreemptable: false
+        - name: deviceshare
+          arguments:
+            deviceshare.VGPUEnable: true  # enable vgpu
+        - name: predicates
+        - name: proportion
+        - name: nodeorder
+        - name: binpack
+    leader_elect_enable: false
+    enabled_admissions: "/jobs/mutate,/jobs/validate,/podgroups/mutate,/pods/validate,/pods/mutate,/queues/mutate,/queues/validate"
+    admission_resources:
+      limits:
+        cpu: 500m
+        memory: 500Mi
+    scheduler_resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+    controller_resources:
+      limits:
+        cpu: 500m
+        memory: 1Gi
+
+devicePlugin:
+  enabled: true
+  image:
+    repository: projecthami/volcano-vgpu-device-plugin
+    tag: "v1.9.4"
+    pullPolicy: IfNotPresent
+  updateStrategy: "RollingUpdate"
+  podAnnotations: {}
+  podLabels: {}
+  podSecurityContext: {}
+  runtimeClassName: "nvidia"
+  nodeSelector:
+    gpustack.llmos.ai/gpu-node: "true"
+  volumes: []
+  volumeMounts: []
+  tolerations:
+    - key: volcano.sh/gpu-memory
+      operator: Exists
+      effect: NoSchedule
+  affinity: {}
+  splitCount: 10
+  metrics:
+    enabled: false

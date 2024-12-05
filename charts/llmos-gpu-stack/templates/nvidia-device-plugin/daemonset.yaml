@@ -1,0 +1,148 @@
+{{- if .Values.devicePlugin.enabled }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "nvidia-device-plugin.fullname" . }}
+  labels:
+    {{- include "nvidia-device-plugin.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "nvidia-device-plugin.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: {{ .Values.devicePlugin.updateStrategy }}
+  template:
+    metadata:
+      {{- with .Values.devicePlugin.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "nvidia-device-plugin.labels" . | nindent 8 }}
+        {{- with .Values.devicePlugin.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      runtimeClassName: {{ .Values.devicePlugin.runtimeClassName }}
+      serviceAccountName: {{ include "nvidia-device-plugin.fullname" . }}
+      securityContext:
+        {{- toYaml .Values.devicePlugin.podSecurityContext | nindent 8 }}
+      {{- with .Values.devicePlugin.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.devicePlugin.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.devicePlugin.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      priorityClassName: {{ .Values.priorityClassNames.devicePlugin }}
+      containers:
+        - image: "{{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}"
+          imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
+          args:
+            - "--device-split-count={{ .Values.devicePlugin.splitCount}}"
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "cp -f /k8s-vgpu/lib/nvidia/* /usr/local/vgpu/"]
+          name: device-plugin
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOOK_PATH
+              value: "/usr/local/vgpu"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["SYS_ADMIN"]
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: lib
+              mountPath: /usr/local/vgpu
+            - name: hosttmp
+              mountPath: /tmp
+{{- if .Values.devicePlugin.metrics.enabled }}
+        - image: "{{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}"
+          imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
+          name: monitor
+          command:
+            - /bin/bash
+            - -c
+            - volcano-vgpu-monitor
+          env:
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+            - name: NVIDIA_MIG_MONITOR_DEVICES
+              value: "all"
+            - name: HOOK_PATH
+              value: "/tmp/vgpu"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+              add: ["SYS_ADMIN"]
+          volumeMounts:
+            - name: dockers
+              mountPath: /run/docker
+            - name: containerds
+              mountPath: /run/containerd
+            - name: sysinfo
+              mountPath: /sysinfo
+            - name: hostvar
+              mountPath: /hostvar
+            - name: hosttmp
+              mountPath: /tmp
+{{- end }}
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/device-plugins
+            type: Directory
+          name: device-plugin
+        - hostPath:
+            path: /usr/local/vgpu
+            type: DirectoryOrCreate
+          name: lib
+        - name: hosttmp
+          hostPath:
+            path: /tmp
+            type: DirectoryOrCreate
+{{- if .Values.devicePlugin.metrics.enabled }}
+        - name: dockers
+          hostPath:
+            path: /run/docker
+            type: DirectoryOrCreate
+        - name: containerds
+          hostPath:
+            path: /run/containerd
+            type: DirectoryOrCreate
+        - name: usrbin
+          hostPath:
+            path: /usr/bin
+            type: Directory
+        - name: sysinfo
+          hostPath:
+            path: /sys
+            type: Directory
+        - name: hostvar
+          hostPath:
+            path: /var
+            type: Directory
+{{- end }}
+{{- end }}

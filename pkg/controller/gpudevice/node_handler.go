@@ -4,11 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 
-	hapi "github.com/Project-HAMi/HAMi/pkg/api"
-	"github.com/Project-HAMi/HAMi/pkg/device"
-	hvidia "github.com/Project-HAMi/HAMi/pkg/device/nvidia"
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -16,8 +12,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators/common"
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators/utils"
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
-	"github.com/llmos-ai/llmos-gpu-stack/pkg/controller/accelerator"
 	ctlgpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai/v1"
 )
 
@@ -30,8 +27,8 @@ type nodeHandler struct {
 	nodeCache       ctlcorev1.NodeCache
 	gpuDevices      ctlgpustackv1.GPUDeviceClient
 	gpuDeviceCache  ctlgpustackv1.GPUDeviceCache
-	devices         map[string]device.Devices
 	nodeDeviceCache *NodeDeviceThreadSafeCache
+	accelerators    map[string]common.Accelerator
 }
 
 // nodeGPUDevicesOnChange helps to reconcile the node gpu devices when node obj has changed
@@ -42,14 +39,14 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 
 	if cacheNode, found := h.nodeDeviceCache.Get(node.Name); found {
 		// Skip validate node handshake time
-		cacheNode.Annotations[HamiNodeHandshakeAnnotation] = node.Annotations[HamiNodeHandshakeAnnotation]
+		cacheNode.Annotations[NodeHandshakeAnnotation] = node.Annotations[NodeHandshakeAnnotation]
 		if reflect.DeepEqual(node.Annotations, cacheNode.Annotations) {
 			logrus.Debugf("node %s devices has not changed, skip updating", node.Name)
 			return nil, nil
 		}
 	}
 
-	if _, err := h.initGPUNodeLabels(node); err != nil {
+	if node, err := h.initGPUNodeLabels(node); err != nil {
 		return node, fmt.Errorf("init gpu node labels error: %v", err)
 	}
 
@@ -65,17 +62,16 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 
 		return h.updateGPUNodeLabel(node, gpuDeviceLabels, false)
 	}
+
 	// Reconcile all device types
-	for _, dt := range h.devices {
-		nodeDevices, err := dt.GetNodeDevices(*node)
-		if err != nil && strings.Contains(err.Error(), deviceAnnoNotFound) {
-			continue
-		} else if err != nil {
+	for _, ac := range h.accelerators {
+		nodeDevices, err := ac.GetNodeDevices(*node)
+		if err != nil {
 			return node, fmt.Errorf("get node devices error: %v", err)
 		}
 
 		hasDevices := strconv.FormatBool(len(nodeDevices) > 0)
-		gpuDeviceLabels[getNodeDeviceNameLabelKey(dt.CommonWord())] = hasDevices
+		gpuDeviceLabels[getNodeDeviceNameLabelKey(ac.GetCommonName())] = hasDevices
 
 		for _, device := range nodeDevices {
 			gpuDevice, err := h.reconcileNodeGPUDevice(device, node)
@@ -94,8 +90,13 @@ func (h *nodeHandler) nodeGPUDevicesOnChange(_ string, node *corev1.Node) (*core
 }
 
 func (h *nodeHandler) hasGPUDevices(node *corev1.Node) bool {
-	for _, dt := range h.devices {
-		if devices, err := dt.GetNodeDevices(*node); err == nil {
+	for _, dt := range h.accelerators {
+		logrus.Debugf("check node %s has %s devices", node.Name, dt.GetName())
+		devices, err := dt.GetNodeDevices(*node)
+		if err != nil {
+			logrus.Warnf("failed to get %s devices from node %s, error: %s", dt.GetName(),
+				node.Name, err.Error())
+		} else {
 			if len(devices) > 0 {
 				return true
 			}
@@ -128,12 +129,12 @@ func (h *nodeHandler) cleanNodeNotReadyDevices(node *corev1.Node, gpuDevices []*
 	}
 	return nil
 }
-func (h *nodeHandler) reconcileNodeGPUDevice(device *hapi.DeviceInfo,
+func (h *nodeHandler) reconcileNodeGPUDevice(device *utils.DeviceInfo,
 	node *corev1.Node) (*gpustackv1.GPUDevice, error) {
 	gpuDevice := constructGPUDevice(device, node)
 	foundDevice, err := h.gpuDeviceCache.Get(gpuDevice.Name)
 	if err != nil && !errors.IsNotFound(err) {
-		return nil, fmt.Errorf("failed to get gpu device by id: %s, %s", device.ID, err)
+		return nil, fmt.Errorf("failed to get gpu device by id: %s, %s", device.Id, err)
 	}
 
 	if foundDevice == nil {
@@ -156,9 +157,11 @@ func (h *nodeHandler) reconcileNodeGPUDevice(device *hapi.DeviceInfo,
 		return toUpdate, nil
 	}
 
-	if !reflect.DeepEqual(foundDevice.Status.GPUDeviceInfo, gpuDevice.Status.GPUDeviceInfo) {
+	gpuDevice.Status.Conditions = foundDevice.Status.Conditions
+	gpuDevice.Status.Pods = foundDevice.Status.Pods
+	if !reflect.DeepEqual(toUpdate.Status, gpuDevice.Status) {
 		logrus.Debugf("updating gpu device %s info of node %s", gpuDevice.Name, node.Name)
-		toUpdate.Status.GPUDeviceInfo = gpuDevice.Status.GPUDeviceInfo
+		toUpdate.Status = gpuDevice.Status
 		if _, err = h.gpuDevices.UpdateStatus(toUpdate); err != nil {
 			return toUpdate, fmt.Errorf("update gpu device status error: %v", err)
 		}
@@ -197,14 +200,6 @@ func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[str
 	for k, v := range deviceLabels {
 		logrus.Debugf("updating gpu node %s labels %s:%s", node.Name, k, v)
 		toUpdate.Labels[k] = v
-		// append nvidia default node selector label
-		if k == getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord) {
-			if v == "true" {
-				toUpdate.Labels["gpu"] = "on"
-			} else {
-				toUpdate.Labels["gpu"] = "off"
-			}
-		}
 	}
 
 	if !reflect.DeepEqual(toUpdate.Labels, node.Labels) {
@@ -216,14 +211,12 @@ func (h *nodeHandler) updateGPUNodeLabel(node *corev1.Node, deviceLabels map[str
 }
 
 func (h *nodeHandler) initGPUNodeLabels(node *corev1.Node) (*corev1.Node, error) {
-	if accelerator.NodeHasGPUPresent(node) {
-		if node.Labels[getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord)] == "" {
+	for _, ac := range h.accelerators {
+		nodeLabelKey := getNodeDeviceNameLabelKey(ac.GetCommonName())
+		if ac.HasGPUPresent(node) && node.Labels[nodeLabelKey] != strTrue {
 			nodeCpy := node.DeepCopy()
-			nodeCpy.Labels[getNodeDeviceNameLabelKey(hvidia.NvidiaGPUCommonWord)] = strTrue
-			nodeCpy.Labels["gpu"] = "on"
-			if !reflect.DeepEqual(nodeCpy.Labels, node.Labels) {
-				return h.nodeClient.Update(nodeCpy)
-			}
+			nodeCpy.Labels[nodeLabelKey] = strTrue
+			return h.nodeClient.Update(nodeCpy)
 		}
 	}
 	return node, nil

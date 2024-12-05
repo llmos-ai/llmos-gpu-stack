@@ -80,13 +80,6 @@ Device manager templates
 {{- end }}
 
 {{/*
-Device manager chart
-*/}}
-{{- define "device-manager.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{- end }}
-
-{{/*
 Device manager labels
 */}}
 {{- define "device-manager.labels" -}}
@@ -106,3 +99,39 @@ app.kubernetes.io/name: {{ include "llmos-gpu-stack.name" . }}
 app.kubernetes.io/instance: "device-manager"
 {{- end }}
 
+{{/*
+Device plugin templates
+*/}}
+{{- define "nvidia-device-plugin.fullname" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 48 | trimSuffix "-" }}-nvidia-device-plugin
+{{- else }}
+{{- $name := default .Chart.Name .Values.nameOverride }}
+{{- if contains $name .Release.Name }}
+{{- printf "%s" .Release.Name | trunc 48 | trimSuffix "-" }}-nvidia-device-plugin
+{{- else }}
+{{- printf "%s-%s" .Release.Name $name | trunc 48 | trimSuffix "-" }}-nvidia-device-plugin
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{/*
+Device plugin selectors
+*/}}
+{{- define "nvidia-device-plugin.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "llmos-gpu-stack.name" . }}
+app.kubernetes.io/instance: "nvidia-device-plugin"
+{{- end }}
+
+{{/*
+Device manager labels
+*/}}
+{{- define "nvidia-device-plugin.labels" -}}
+helm.sh/chart: {{ include "llmos-gpu-stack.chart" . }}
+{{ include "nvidia-device-plugin.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}

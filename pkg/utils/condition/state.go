@@ -8,5 +8,6 @@ const (
 	StatePending    = "Pending"
 	StateReady      = "Ready"
 	StateUnhealthy  = "Unhealthy"
+	StateHealthy    = "Healthy"
 	StateOffline    = "Offline"
 )

@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/Project-HAMi/HAMi/pkg/device"
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators"
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
 	"github.com/llmos-ai/llmos-gpu-stack/pkg/config"
 	ctlgpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai/v1"
@@ -20,47 +20,46 @@ const (
 	gpuDeviceOnChange     = "gpuDevice.onChange"
 	gpuDeviceNodeOnDelete = "gpuDevice.nodeOnDelete"
 	gpuDevicePodOnChange  = "gpuDevice.PodOnChange"
-	gpuDevicePodOnDelete  = "gpuDevice.PodOnDelete"
-
-	deviceAnnoNotFound = "annos not found"
 )
 
 type gpuHandler struct {
-	gpuDevices     ctlgpustackv1.GPUDeviceClient
-	gpuDeviceCache ctlgpustackv1.GPUDeviceCache
-	podCache       ctlcorev1.PodCache
-	devices        map[string]device.Devices
+	gpuDevices           ctlgpustackv1.GPUDeviceClient
+	gpuDeviceCache       ctlgpustackv1.GPUDeviceCache
+	podCache             ctlcorev1.PodCache
+	acceleratorChecklist map[string]string
 }
 
 func Register(_ context.Context, mgmt *config.Management) error {
 	gpuDevices := mgmt.GPUStackFactory.Gpustack().V1().GPUDevice()
 	nodes := mgmt.CoreFactory.Core().V1().Node()
 	pods := mgmt.CoreFactory.Core().V1().Pod()
+	acceleratorCheckList := accelerators.GetAcceleratorDevicesCheckList()
 
 	nodeHandler := &nodeHandler{
 		nodeClient:      nodes,
 		nodeCache:       nodes.Cache(),
 		gpuDevices:      gpuDevices,
 		gpuDeviceCache:  gpuDevices.Cache(),
-		devices:         mgmt.GPUDevices,
+		accelerators:    mgmt.Accelerators,
 		nodeDeviceCache: NewThreadSafeCache(),
 	}
 	nodes.OnChange(mgmt.Ctx, gpuDeviceNodeOnChange, nodeHandler.nodeGPUDevicesOnChange)
 	nodes.OnRemove(mgmt.Ctx, gpuDeviceNodeOnDelete, nodeHandler.nodeGPUDevicesOnRemove)
 
 	gpuHandler := &gpuHandler{
-		gpuDevices:     gpuDevices,
-		gpuDeviceCache: gpuDevices.Cache(),
-		podCache:       pods.Cache(),
-		devices:        mgmt.GPUDevices,
+		gpuDevices:           gpuDevices,
+		gpuDeviceCache:       gpuDevices.Cache(),
+		podCache:             pods.Cache(),
+		acceleratorChecklist: acceleratorCheckList,
 	}
 	gpuDevices.OnChange(mgmt.Ctx, gpuDeviceOnChange, gpuHandler.gpuDeviceOnChange)
 
 	podHandler := &podHandler{
-		gpuDevices:          gpuDevices,
-		gpuDeviceController: gpuDevices,
-		gpuDeviceCache:      gpuDevices.Cache(),
-		pods:                pods,
+		gpuDevices:           gpuDevices,
+		gpuDeviceController:  gpuDevices,
+		gpuDeviceCache:       gpuDevices.Cache(),
+		pods:                 pods,
+		acceleratorCheckList: acceleratorCheckList,
 	}
 
 	pods.OnChange(mgmt.Ctx, gpuDevicePodOnChange, podHandler.onGpuPodChange)
@@ -91,7 +90,7 @@ func (h *gpuHandler) gpuDeviceOnChange(_ string, gpuDevice *gpustackv1.GPUDevice
 			continue
 		}
 
-		devices, err := getPodAllocatedDevices(pod)
+		devices, err := getPodAllocatedDevices(h.acceleratorChecklist, pod)
 		if err != nil {
 			return gpuDevice, err
 		}
