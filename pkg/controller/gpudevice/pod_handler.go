@@ -4,20 +4,21 @@ import (
 	"fmt"
 	"reflect"
 
-	hutil "github.com/Project-HAMi/HAMi/pkg/util"
 	ctlcorev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core/v1"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators/utils"
 	ctlgpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai/v1"
 )
 
 type podHandler struct {
-	pods                ctlcorev1.PodClient
-	gpuDevices          ctlgpustackv1.GPUDeviceClient
-	gpuDeviceController ctlgpustackv1.GPUDeviceController
-	gpuDeviceCache      ctlgpustackv1.GPUDeviceCache
+	pods                 ctlcorev1.PodClient
+	gpuDevices           ctlgpustackv1.GPUDeviceClient
+	gpuDeviceController  ctlgpustackv1.GPUDeviceController
+	gpuDeviceCache       ctlgpustackv1.GPUDeviceCache
+	acceleratorCheckList map[string]string
 }
 
 func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, error) {
@@ -25,7 +26,7 @@ func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, err
 		return nil, nil
 	}
 
-	// Note: handle pod deletion in updates to avoid normal pod deletion finalizer
+	// Note: handle gpu pods syncing in updates to avoid finalizer blocking on all other pods
 	if pod.DeletionTimestamp != nil {
 		return h.onGpuPodDelete(pod)
 	}
@@ -34,7 +35,7 @@ func (h *podHandler) onGpuPodChange(_ string, pod *corev1.Pod) (*corev1.Pod, err
 		return nil, nil
 	}
 
-	devices, err := getPodAllocatedDevices(pod)
+	devices, err := getPodAllocatedDevices(h.acceleratorCheckList, pod)
 	if err != nil {
 		return pod, fmt.Errorf("get pod gpu devices error: %v", err)
 	}
@@ -81,10 +82,9 @@ func (h *podHandler) syncGPUDeviceStatus(devices []GPUDevice) error {
 	return nil
 }
 
-func getPodAllocatedDevices(pod *corev1.Pod) ([]GPUDevice, error) {
+func getPodAllocatedDevices(checkList map[string]string, pod *corev1.Pod) ([]GPUDevice, error) {
 	var gpuDevices []GPUDevice
-	podDevices, err := hutil.DecodePodDevices(hutil.SupportDevices, pod.Annotations)
-	logrus.Debugf("pod devices: %v, in request devices: %+v", podDevices, hutil.InRequestDevices)
+	podDevices, err := utils.DecodePodDevices(checkList, pod.Annotations)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,6 @@ func getPodAllocatedDevices(pod *corev1.Pod) ([]GPUDevice, error) {
 			for _, dev := range cDevices {
 				gpuDevices = append(gpuDevices, GPUDevice{
 					PodName:   getPodNamespaceName(pod),
-					Index:     dev.Idx,
 					Vendor:    dev.Type,
 					UUID:      dev.UUID,
 					UsedMem:   dev.Usedmem,
@@ -112,7 +111,7 @@ func (h *podHandler) onGpuPodDelete(pod *corev1.Pod) (*corev1.Pod, error) {
 		return nil, nil
 	}
 
-	devices, err := getPodAllocatedDevices(pod)
+	devices, err := getPodAllocatedDevices(h.acceleratorCheckList, pod)
 	if err != nil {
 		return pod, fmt.Errorf("get pod gpu devices error: %v", err)
 	}
@@ -149,5 +148,5 @@ func (h *podHandler) onGpuPodDelete(pod *corev1.Pod) (*corev1.Pod, error) {
 }
 
 func getPodNamespaceName(pod *corev1.Pod) string {
-	return fmt.Sprintf("%s:%s", pod.Namespace, pod.Name)
+	return fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)
 }

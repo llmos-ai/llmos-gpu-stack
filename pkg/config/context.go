@@ -3,7 +3,6 @@ package config
 import (
 	"context"
 
-	hdevice "github.com/Project-HAMi/HAMi/pkg/device"
 	"github.com/rancher/lasso/pkg/controller"
 	appsv1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/apps"
 	corev1 "github.com/rancher/wrangler/v3/pkg/generated/controllers/core"
@@ -12,27 +11,29 @@ import (
 	"github.com/rancher/wrangler/v3/pkg/start"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators"
+	"github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators/common"
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/controllers/gpustack.llmos.ai"
 )
 
 type Management struct {
-	Ctx        context.Context
-	K8s        *kubernetes.Clientset
-	GPUDevices map[string]hdevice.Devices
+	Ctx context.Context
+	K8s *kubernetes.Clientset
 
 	CoreFactory     *corev1.Factory
 	AppsFactory     *appsv1.Factory
 	GPUStackFactory *gpustackv1.Factory
 
+	Accelerators map[string]common.Accelerator
+
 	starters []start.Starter
 }
 
 func NewManagementContext(ctx context.Context, kubeConfig string) (*Management, error) {
-	hdevice.InitDevices()
-	hdevice.GlobalFlagSet()
+	accelerators.Configure()
 	mgmt := &Management{
-		Ctx:        ctx,
-		GPUDevices: hdevice.GetDevices(),
+		Ctx:          ctx,
+		Accelerators: accelerators.GetAccelerators(),
 	}
 
 	clientConfig, err := GetConfig(kubeConfig)

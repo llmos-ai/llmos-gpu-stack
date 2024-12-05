@@ -25,7 +25,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "llmos-gpu-stack.serviceAccountName" . }}
+      serviceAccountName: {{ include "device-manager.fullname" . }}
       securityContext:
         {{- toYaml .Values.gpuStack.deviceManager.podSecurityContext | nindent 8 }}
       containers:

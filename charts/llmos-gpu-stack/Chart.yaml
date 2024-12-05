@@ -32,13 +32,12 @@ dependencies:
     tags:
       - gpu-operator
       - nvidia
-  - name: hami
-    version: 2.4.1
-    condition: hami.enabled
-    repository: https://project-hami.github.io/HAMi
+  - name: volcano
+    version: 1.10.0
+    repository: https://volcano-sh.github.io/helm-charts
+    condition: volcano.enabled
     tags:
-      - hami
-      - vGPU manager
+      - gang-scheduling
   - name: crds
     version: 0.1.0
     condition: crds.enabled

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"strings"
 
-	hapi "github.com/Project-HAMi/HAMi/pkg/api"
-	hutil "github.com/Project-HAMi/HAMi/pkg/util"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
+	autils "github.com/llmos-ai/llmos-gpu-stack/pkg/accelerators/utils"
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
 	"github.com/llmos-ai/llmos-gpu-stack/pkg/utils"
 	"github.com/llmos-ai/llmos-gpu-stack/pkg/utils/condition"
@@ -32,10 +31,11 @@ const (
 	GPUStackPrefix   = "gpustack.llmos.ai"
 	LabelNodeNameKey = GPUStackPrefix + "/node-name"
 
-	HamiNodeHandshakeAnnotation = "hami.io/node-handshake"
+	NodeHandshakeAnnotation = "volcano.sh/node-vgpu-handshake"
+	AssignedNodeAnnotations = "volcano.sh/vgpu-node"
 )
 
-func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.GPUDevice {
+func constructGPUDevice(device *autils.DeviceInfo, node *corev1.Node) *gpustackv1.GPUDevice {
 	var internalIp string
 	for _, address := range node.Status.Addresses {
 		if address.Type == corev1.NodeInternalIP {
@@ -46,7 +46,7 @@ func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.
 	logrus.Debugf("construct gpu device %+v for node %s", ParseDeviceInfo(device), node.Name)
 	return &gpustackv1.GPUDevice{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: getDeviceName(device.ID),
+			Name: getDeviceName(device.Id),
 			Labels: map[string]string{
 				LabelNodeNameKey: node.Name,
 			},
@@ -63,22 +63,22 @@ func constructGPUDevice(device *hapi.DeviceInfo, node *corev1.Node) *gpustackv1.
 	}
 }
 
-func ParseDeviceInfo(devInfo *hapi.DeviceInfo) gpustackv1.GPUDeviceInfo {
+func ParseDeviceInfo(devInfo *autils.DeviceInfo) gpustackv1.GPUDeviceInfo {
 	return gpustackv1.GPUDeviceInfo{
-		UUID:     devInfo.ID,
+		UUID:     devInfo.Id,
 		Index:    ptr.To(devInfo.Index),
 		Vendor:   devInfo.Type[:strings.IndexByte(devInfo.Type, '-')],
 		DevName:  strings.TrimPrefix(devInfo.Type[strings.IndexByte(devInfo.Type, '-'):], "-"),
 		MaxCount: devInfo.Count,
 		VRAM:     devInfo.Devmem,
-		DevCores: devInfo.Devcore,
-		Numa:     devInfo.Numa,
-		Health:   devInfo.Health,
+		Health:   true, //TODO, need to get the actual health status from the device
 	}
 }
 
-func getDeviceState(device *hapi.DeviceInfo, node *corev1.Node) string {
+func getDeviceState(device *autils.DeviceInfo, node *corev1.Node) string {
 	nodeIsReady := utils.IsNodeReady(node)
+
+	logrus.Debugf("check status: device %s is %v, node %s is %v", device.Id, device.Health, node.Name, nodeIsReady)
 	if !nodeIsReady {
 		return condition.StateOffline
 	}
@@ -86,7 +86,7 @@ func getDeviceState(device *hapi.DeviceInfo, node *corev1.Node) string {
 		return condition.StateUnhealthy
 	}
 	if device.Health && nodeIsReady {
-		return condition.StateReady
+		return condition.StateHealthy
 	}
 
 	return condition.StatePending
@@ -100,10 +100,10 @@ func getPodDeviceNameLabelKey(deviceId string) string {
 	return fmt.Sprintf("%s/%s", GPUStackPrefix, getDeviceName(deviceId))
 }
 
-func getNodeDeviceNameLabelKey(deviceCommonName string) string {
-	return fmt.Sprintf("%s/%s-node", GPUStackPrefix, strings.ToLower(deviceCommonName))
+func getNodeDeviceNameLabelKey(commonName string) string {
+	return fmt.Sprintf("%s/%s-node", GPUStackPrefix, strings.ToLower(commonName))
 }
 
 func hasVGPUDevice(pod *corev1.Pod) bool {
-	return pod.Annotations[hutil.AssignedNodeAnnotations] != ""
+	return pod.Annotations[AssignedNodeAnnotations] != ""
 }
