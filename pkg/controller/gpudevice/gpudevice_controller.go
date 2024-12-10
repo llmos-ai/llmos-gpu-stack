@@ -98,7 +98,7 @@ func (h *gpuHandler) gpuDeviceOnChange(_ string, gpuDevice *gpustackv1.GPUDevice
 	}
 
 	var podList = make([]gpustackv1.GPUPod, 0)
-
+	var totalUsedMem = int32(0)
 	for _, device := range deviceList {
 		podList = append(podList, gpustackv1.GPUPod{
 			Name:             device.PodName,
@@ -106,10 +106,12 @@ func (h *gpuHandler) gpuDeviceOnChange(_ string, gpuDevice *gpustackv1.GPUDevice
 			MemReq:           device.UsedMem,
 			MemPercentageReq: utils.RoundToInt((float64(device.UsedMem)/float64(gpuDevice.Status.VRAM))*100, 2),
 		})
+		totalUsedMem += device.UsedMem
 	}
 
 	toUpdate := gpuDevice.DeepCopy()
 	toUpdate.Status.Pods = podList
+	toUpdate.Status.VRAMUsed = totalUsedMem
 	if !reflect.DeepEqual(gpuDevice.Status, toUpdate.Status) {
 		return h.gpuDevices.UpdateStatus(toUpdate)
 	}

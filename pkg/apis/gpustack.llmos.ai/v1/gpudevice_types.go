@@ -22,6 +22,7 @@ var (
 // +kubebuilder:printcolumn:name="Vendor",type="string",JSONPath=".status.vendor"
 // +kubebuilder:printcolumn:name="Device Name",type="string",JSONPath=".status.devName"
 // +kubebuilder:printcolumn:name="Vram",type="integer",JSONPath=".status.vram"
+// +kubebuilder:printcolumn:name="Index",type="integer",JSONPath=".status.index"
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.state"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
@@ -66,6 +67,8 @@ type GPUDeviceInfo struct {
 	MaxCount int32 `json:"maxCount,omitempty"`
 	// VRAM is the amount of video RAM in MB
 	VRAM int32 `json:"vram,omitempty"`
+	// VRAMUsed is the amount of video RAM in MB that is currently being requested by pods
+	VRAMUsed int32 `json:"vramUsed,omitempty"`
 	// CUDACores is the number of CUDA cores available on the GPU device
 	CUDACores int32 `json:"cudaCores,omitempty"`
 	// DevCores is the total percentage number of cores available on the GPU
