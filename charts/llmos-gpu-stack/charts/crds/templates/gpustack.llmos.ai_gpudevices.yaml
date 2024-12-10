@@ -27,6 +27,9 @@ spec:
     - jsonPath: .status.vram
       name: Vram
       type: integer
+    - jsonPath: .status.index
+      name: Index
+      type: integer
     - jsonPath: .status.state
       name: Status
       type: string
@@ -161,6 +164,11 @@ spec:
                 type: string
               vram:
                 description: VRAM is the amount of video RAM in MB
+                format: int32
+                type: integer
+              vramUsed:
+                description: VRAMUsed is the amount of video RAM in MB that is currently
+                  being requested by pods
                 format: int32
                 type: integer
             type: object
