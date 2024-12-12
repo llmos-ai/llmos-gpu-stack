@@ -2,9 +2,9 @@ nameOverride: ""
 fullnameOverride: ""
 
 global:
-  ## @param global.imageRegistry Global Docker image registry
+  ## @param global.imageRegistry Global container image registry
   ##
-  imageRegistry: ""
+  imageRegistry: "ghcr.io"
   ## @param global.imagePullSecrets Global Docker registry secret names as an array
   ## e.g.
   ## imagePullSecrets:
@@ -33,7 +33,7 @@ gpuStack:
     replicas: 1
 
     image:
-      repository: ghcr.io/llmos-ai/llmos-gpu-stack
+      repository: llmos-ai/llmos-gpu-stack
       pullPolicy: Always
       # Overrides the image tag whose default is the chart appVersion.
       tag: "main-head"
@@ -156,7 +156,7 @@ volcano:
 devicePlugin:
   enabled: true
   image:
-    repository: projecthami/volcano-vgpu-device-plugin
+    repository: llmos-ai/mirrored-projecthami-volcano-vgpu-device-plugin
     tag: "v1.9.4"
     pullPolicy: IfNotPresent
   updateStrategy: "RollingUpdate"

@@ -46,7 +46,7 @@ spec:
       {{- end }}
       priorityClassName: {{ .Values.priorityClassNames.devicePlugin }}
       containers:
-        - image: "{{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}"
+          image: {{ printf "%s%s:%s" (include "globalRegistry" .) .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
           imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
           args:
             - "--device-split-count={{ .Values.devicePlugin.splitCount}}"
@@ -75,7 +75,7 @@ spec:
             - name: hosttmp
               mountPath: /tmp
 {{- if .Values.devicePlugin.metrics.enabled }}
-        - image: "{{ .Values.devicePlugin.image.repository }}:{{ .Values.devicePlugin.image.tag }}"
+          image: {{ printf "%s%s:%s" (include "globalRegistry" .) .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
           imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
           name: monitor
           command:
