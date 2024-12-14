@@ -4,14 +4,13 @@ fullnameOverride: ""
 global:
   ## @param global.imageRegistry Global container image registry
   ##
-  imageRegistry: "ghcr.io"
+  imageRegistry: ""
   ## @param global.imagePullSecrets Global Docker registry secret names as an array
   ## e.g.
   ## imagePullSecrets:
   ##   - myRegistryKeySecretName
   ##
   imagePullSecrets: []
-  imagePullPolicy: IfNotPresent
 
 priorityClassNames:
   deviceManager: system-node-critical
@@ -33,6 +32,7 @@ gpuStack:
     replicas: 1
 
     image:
+      registry: ghcr.io
       repository: llmos-ai/llmos-gpu-stack
       pullPolicy: Always
       # Overrides the image tag whose default is the chart appVersion.
@@ -163,6 +163,7 @@ volcano:
 devicePlugin:
   enabled: true
   image:
+    registry: ghcr.io
     repository: llmos-ai/mirrored-projecthami-volcano-vgpu-device-plugin
     tag: "v1.9.4"
     pullPolicy: IfNotPresent
