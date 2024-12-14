@@ -62,14 +62,6 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
-{{- define "globalRegistry" }}
-{{- if .Values.global.imageRegistry }}
-{{- printf "%s/" .Values.global.imageRegistry }}
-{{- else }}
-{{- print "" }}
-{{- end }}
-{{- end }}
-
 {{/*
 Device manager templates
 */}}

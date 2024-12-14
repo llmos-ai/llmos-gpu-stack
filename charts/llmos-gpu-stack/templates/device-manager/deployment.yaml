@@ -1,3 +1,4 @@
+{{- $registry := .Values.global.imageRegistry | default .Values.gpuStack.deviceManager.image.registry -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,10 +31,10 @@ spec:
         {{- toYaml .Values.gpuStack.deviceManager.podSecurityContext | nindent 8 }}
       containers:
         - name: "device-manager"
+          image: {{ printf "%s/%s:%s" $registry .Values.gpuStack.deviceManager.image.repository .Values.gpuStack.deviceManager.image.tag }}
+          imagePullPolicy: {{ .Values.gpuStack.deviceManager.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.gpuStack.deviceManager.securityContext | nindent 12 }}
-          image: {{ printf "%s%s:%s" (include "globalRegistry" .) .Values.gpuStack.deviceManager.image.repository .Values.gpuStack.deviceManager.image.tag }}
-          imagePullPolicy: {{ .Values.gpuStack.deviceManager.image.pullPolicy }}
           ports:
             - name: http
               containerPort: {{ .Values.gpuStack.deviceManager.service.port }}

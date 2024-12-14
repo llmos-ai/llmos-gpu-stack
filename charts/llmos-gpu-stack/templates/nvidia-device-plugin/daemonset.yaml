@@ -1,4 +1,5 @@
 {{- if .Values.devicePlugin.enabled }}
+{{- $registry := .Values.global.imageRegistry | default .Values.devicePlugin.image.registry -}}
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -46,7 +47,8 @@ spec:
       {{- end }}
       priorityClassName: {{ .Values.priorityClassNames.devicePlugin }}
       containers:
-        - image: {{ printf "%s%s:%s" (include "globalRegistry" .) .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
+        - name: device-plugin
+          image: {{ printf "%s/%s:%s" $registry .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
           imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
           args:
             - "--device-split-count={{ .Values.devicePlugin.splitCount}}"
@@ -54,7 +56,6 @@ spec:
             postStart:
               exec:
                 command: ["/bin/sh", "-c", "cp -f /k8s-vgpu/lib/nvidia/* /usr/local/vgpu/"]
-          name: device-plugin
           env:
             - name: NODE_NAME
               valueFrom:
@@ -75,9 +76,9 @@ spec:
             - name: hosttmp
               mountPath: /tmp
 {{- if .Values.devicePlugin.metrics.enabled }}
-        - image: {{ printf "%s%s:%s" (include "globalRegistry" .) .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
+        - name: monitor
+          image: {{ printf "%s/%s:%s" $registry .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
           imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
-          name: monitor
           command:
             - /bin/bash
             - -c
