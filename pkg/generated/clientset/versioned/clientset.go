@@ -1,5 +1,5 @@
 /*
-Copyright 2024 llmos.ai.
+Copyright 2025 llmos.ai.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ limitations under the License.
 package versioned
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	gpustackv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/clientset/versioned/typed/gpustack.llmos.ai/v1"
 	discovery "k8s.io/client-go/discovery"

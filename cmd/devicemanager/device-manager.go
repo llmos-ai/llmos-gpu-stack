@@ -6,7 +6,7 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	"github.com/llmos-ai/llmos/utils/cli"
+	"github.com/llmos-ai/cli"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
