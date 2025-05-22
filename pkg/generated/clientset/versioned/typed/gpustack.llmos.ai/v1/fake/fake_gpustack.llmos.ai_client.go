@@ -1,5 +1,5 @@
 /*
-Copyright 2024 llmos.ai.
+Copyright 2025 llmos.ai.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ type FakeGpustackV1 struct {
 }
 
 func (c *FakeGpustackV1) GPUDevices() v1.GPUDeviceInterface {
-	return &FakeGPUDevices{c}
+	return newFakeGPUDevices(c)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

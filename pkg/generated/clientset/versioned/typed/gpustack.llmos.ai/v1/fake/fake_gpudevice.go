@@ -1,5 +1,5 @@
 /*
-Copyright 2024 llmos.ai.
+Copyright 2025 llmos.ai.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,120 +18,30 @@ limitations under the License.
 package fake
 
 import (
-	"context"
-
 	v1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	gpustackllmosaiv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/clientset/versioned/typed/gpustack.llmos.ai/v1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeGPUDevices implements GPUDeviceInterface
-type FakeGPUDevices struct {
+// fakeGPUDevices implements GPUDeviceInterface
+type fakeGPUDevices struct {
+	*gentype.FakeClientWithList[*v1.GPUDevice, *v1.GPUDeviceList]
 	Fake *FakeGpustackV1
 }
 
-var gpudevicesResource = v1.SchemeGroupVersion.WithResource("gpudevices")
-
-var gpudevicesKind = v1.SchemeGroupVersion.WithKind("GPUDevice")
-
-// Get takes name of the gPUDevice, and returns the corresponding gPUDevice object, and an error if there is any.
-func (c *FakeGPUDevices) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.GPUDevice, err error) {
-	emptyResult := &v1.GPUDevice{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootGetActionWithOptions(gpudevicesResource, name, options), emptyResult)
-	if obj == nil {
-		return emptyResult, err
+func newFakeGPUDevices(fake *FakeGpustackV1) gpustackllmosaiv1.GPUDeviceInterface {
+	return &fakeGPUDevices{
+		gentype.NewFakeClientWithList[*v1.GPUDevice, *v1.GPUDeviceList](
+			fake.Fake,
+			"",
+			v1.SchemeGroupVersion.WithResource("gpudevices"),
+			v1.SchemeGroupVersion.WithKind("GPUDevice"),
+			func() *v1.GPUDevice { return &v1.GPUDevice{} },
+			func() *v1.GPUDeviceList { return &v1.GPUDeviceList{} },
+			func(dst, src *v1.GPUDeviceList) { dst.ListMeta = src.ListMeta },
+			func(list *v1.GPUDeviceList) []*v1.GPUDevice { return gentype.ToPointerSlice(list.Items) },
+			func(list *v1.GPUDeviceList, items []*v1.GPUDevice) { list.Items = gentype.FromPointerSlice(items) },
+		),
+		fake,
 	}
-	return obj.(*v1.GPUDevice), err
-}
-
-// List takes label and field selectors, and returns the list of GPUDevices that match those selectors.
-func (c *FakeGPUDevices) List(ctx context.Context, opts metav1.ListOptions) (result *v1.GPUDeviceList, err error) {
-	emptyResult := &v1.GPUDeviceList{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootListActionWithOptions(gpudevicesResource, gpudevicesKind, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1.GPUDeviceList{ListMeta: obj.(*v1.GPUDeviceList).ListMeta}
-	for _, item := range obj.(*v1.GPUDeviceList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested gPUDevices.
-func (c *FakeGPUDevices) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewRootWatchActionWithOptions(gpudevicesResource, opts))
-}
-
-// Create takes the representation of a gPUDevice and creates it.  Returns the server's representation of the gPUDevice, and an error, if there is any.
-func (c *FakeGPUDevices) Create(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.CreateOptions) (result *v1.GPUDevice, err error) {
-	emptyResult := &v1.GPUDevice{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateActionWithOptions(gpudevicesResource, gPUDevice, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.GPUDevice), err
-}
-
-// Update takes the representation of a gPUDevice and updates it. Returns the server's representation of the gPUDevice, and an error, if there is any.
-func (c *FakeGPUDevices) Update(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.UpdateOptions) (result *v1.GPUDevice, err error) {
-	emptyResult := &v1.GPUDevice{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateActionWithOptions(gpudevicesResource, gPUDevice, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.GPUDevice), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGPUDevices) UpdateStatus(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.UpdateOptions) (result *v1.GPUDevice, err error) {
-	emptyResult := &v1.GPUDevice{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(gpudevicesResource, "status", gPUDevice, opts), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.GPUDevice), err
-}
-
-// Delete takes name of the gPUDevice and deletes it. Returns an error if one occurs.
-func (c *FakeGPUDevices) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(gpudevicesResource, name, opts), &v1.GPUDevice{})
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeGPUDevices) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionActionWithOptions(gpudevicesResource, opts, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1.GPUDeviceList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched gPUDevice.
-func (c *FakeGPUDevices) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GPUDevice, err error) {
-	emptyResult := &v1.GPUDevice{}
-	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceActionWithOptions(gpudevicesResource, name, pt, data, opts, subresources...), emptyResult)
-	if obj == nil {
-		return emptyResult, err
-	}
-	return obj.(*v1.GPUDevice), err
 }

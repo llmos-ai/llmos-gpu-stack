@@ -1,5 +1,5 @@
 /*
-Copyright 2024 llmos.ai.
+Copyright 2025 llmos.ai.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ limitations under the License.
 package v1
 
 import (
-	"context"
+	context "context"
 
-	v1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
+	gpustackllmosaiv1 "github.com/llmos-ai/llmos-gpu-stack/pkg/apis/gpustack.llmos.ai/v1"
 	scheme "github.com/llmos-ai/llmos-gpu-stack/pkg/generated/clientset/versioned/scheme"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
@@ -36,33 +36,34 @@ type GPUDevicesGetter interface {
 
 // GPUDeviceInterface has methods to work with GPUDevice resources.
 type GPUDeviceInterface interface {
-	Create(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.CreateOptions) (*v1.GPUDevice, error)
-	Update(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.UpdateOptions) (*v1.GPUDevice, error)
+	Create(ctx context.Context, gPUDevice *gpustackllmosaiv1.GPUDevice, opts metav1.CreateOptions) (*gpustackllmosaiv1.GPUDevice, error)
+	Update(ctx context.Context, gPUDevice *gpustackllmosaiv1.GPUDevice, opts metav1.UpdateOptions) (*gpustackllmosaiv1.GPUDevice, error)
 	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-	UpdateStatus(ctx context.Context, gPUDevice *v1.GPUDevice, opts metav1.UpdateOptions) (*v1.GPUDevice, error)
+	UpdateStatus(ctx context.Context, gPUDevice *gpustackllmosaiv1.GPUDevice, opts metav1.UpdateOptions) (*gpustackllmosaiv1.GPUDevice, error)
 	Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error
-	Get(ctx context.Context, name string, opts metav1.GetOptions) (*v1.GPUDevice, error)
-	List(ctx context.Context, opts metav1.ListOptions) (*v1.GPUDeviceList, error)
+	Get(ctx context.Context, name string, opts metav1.GetOptions) (*gpustackllmosaiv1.GPUDevice, error)
+	List(ctx context.Context, opts metav1.ListOptions) (*gpustackllmosaiv1.GPUDeviceList, error)
 	Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.GPUDevice, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *gpustackllmosaiv1.GPUDevice, err error)
 	GPUDeviceExpansion
 }
 
 // gPUDevices implements GPUDeviceInterface
 type gPUDevices struct {
-	*gentype.ClientWithList[*v1.GPUDevice, *v1.GPUDeviceList]
+	*gentype.ClientWithList[*gpustackllmosaiv1.GPUDevice, *gpustackllmosaiv1.GPUDeviceList]
 }
 
 // newGPUDevices returns a GPUDevices
 func newGPUDevices(c *GpustackV1Client) *gPUDevices {
 	return &gPUDevices{
-		gentype.NewClientWithList[*v1.GPUDevice, *v1.GPUDeviceList](
+		gentype.NewClientWithList[*gpustackllmosaiv1.GPUDevice, *gpustackllmosaiv1.GPUDeviceList](
 			"gpudevices",
 			c.RESTClient(),
 			scheme.ParameterCodec,
 			"",
-			func() *v1.GPUDevice { return &v1.GPUDevice{} },
-			func() *v1.GPUDeviceList { return &v1.GPUDeviceList{} }),
+			func() *gpustackllmosaiv1.GPUDevice { return &gpustackllmosaiv1.GPUDevice{} },
+			func() *gpustackllmosaiv1.GPUDeviceList { return &gpustackllmosaiv1.GPUDeviceList{} },
+		),
 	}
 }
