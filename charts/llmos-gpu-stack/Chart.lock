@@ -1,12 +1,12 @@
 dependencies:
 - name: gpu-operator
   repository: https://helm.ngc.nvidia.com/nvidia
-  version: v24.6.2
+  version: v25.3.0
 - name: volcano
   repository: https://volcano-sh.github.io/helm-charts
-  version: 1.10.0
+  version: 1.11.2
 - name: crds
   repository: ""
   version: 0.1.0
-digest: sha256:a5b6e20467032501ca7b4257f8ce3087089576bda08d4f6f30ff3cc88025c5a9
-generated: "2024-12-05T12:19:00.308434+08:00"
+digest: sha256:98bb6d6c13245a355d9dd085615152839deacdac25abb129f8f9c4a54051e944
+generated: "2025-05-23T18:16:26.927767+08:00"
