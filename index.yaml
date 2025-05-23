@@ -2,6 +2,38 @@ apiVersion: v1
 entries:
   llmos-gpu-stack:
   - apiVersion: v2
+    appVersion: v0.1.1-rc1
+    created: "2025-05-23T11:36:24.501701478Z"
+    dependencies:
+    - condition: gpuOperator.enabled
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      tags:
+      - gpu-operator
+      - nvidia
+      version: v25.3.0
+    - condition: volcano.enabled
+      name: volcano
+      repository: https://volcano-sh.github.io/helm-charts
+      tags:
+      - gang-scheduling
+      version: 1.11.2
+    - condition: crds.enabled
+      name: crds
+      repository: ""
+      tags:
+      - crds
+      version: 0.1.0
+    description: LLMOS GPU Stack helm chart
+    digest: 565969b3522918ac4043fba4cbc334350ca48c31b8ca0289bf475bac6d837da8
+    maintainers:
+    - name: llmos-ai
+    name: llmos-gpu-stack
+    type: application
+    urls:
+    - https://github.com/llmos-ai/llmos-gpu-stack/releases/download/llmos-gpu-stack-0.1.1-rc1/llmos-gpu-stack-0.1.1-rc1.tgz
+    version: 0.1.1-rc1
+  - apiVersion: v2
     appVersion: v0.1.0
     created: "2024-12-27T03:18:56.131169846Z"
     dependencies:
@@ -279,4 +311,4 @@ entries:
     urls:
     - https://github.com/llmos-ai/llmos-gpu-stack/releases/download/llmos-gpu-stack-crd-0.1.0-rc1/llmos-gpu-stack-crd-0.1.0-rc1.tgz
     version: 0.1.0-rc1
-generated: "2024-12-27T03:18:56.131202988Z"
+generated: "2025-05-23T11:36:24.501746392Z"
