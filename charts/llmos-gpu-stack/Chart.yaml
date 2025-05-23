@@ -27,13 +27,13 @@ maintainers:
 dependencies:
   - name: gpu-operator
     condition: gpuOperator.enabled
-    version: "v24.6.2"
+    version: "v25.3.0"
     repository: "https://helm.ngc.nvidia.com/nvidia"
     tags:
       - gpu-operator
       - nvidia
   - name: volcano
-    version: 1.10.0
+    version: 1.11.2
     repository: https://volcano-sh.github.io/helm-charts
     condition: volcano.enabled
     tags:
