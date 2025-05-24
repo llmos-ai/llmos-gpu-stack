@@ -14,25 +14,20 @@ func DecodeNodeDevices(str string) ([]*DeviceInfo, error) {
 	}
 	tmp := strings.Split(str, ":")
 	var retval []*DeviceInfo
-	for i, val := range tmp {
+	for _, val := range tmp {
 		if strings.Contains(val, ",") {
 			items := strings.Split(val, ",")
-			if len(items) == 5 {
-				count, _ := strconv.Atoi(items[1])
-				devmem, _ := strconv.Atoi(items[2])
-				//health, _ := strconv.ParseBool(items[4])
-				i := DeviceInfo{
-					Index:  i,
-					Id:     items[0],
-					Count:  int32(count),
-					Devmem: int32(devmem),
-					Type:   items[3],
-					Health: true, //TODO, fix the health status, is always false for now
-				}
-				retval = append(retval, &i)
-			} else {
-				return []*DeviceInfo{}, fmt.Errorf("node annotations not decode successfully")
+			count, _ := strconv.Atoi(items[1])
+			devmem, _ := strconv.Atoi(items[2])
+			health, _ := strconv.ParseBool(items[4])
+			i := DeviceInfo{
+				Id:     items[0],
+				Count:  int32(count),
+				Devmem: int32(devmem),
+				Type:   items[3],
+				Health: health,
 			}
+			retval = append(retval, &i)
 		}
 	}
 	return retval, nil
