@@ -117,7 +117,7 @@ volcano:
     scheduler_image_name: "llmos-ai/mirrored-volcanosh-vc-scheduler"
     admission_image_name: "llmos-ai/mirrored-volcanosh-vc-webhook-manager"
     image_pull_policy: IfNotPresent
-    image_tag_version: "v1.11.2"
+    image_tag_version: "v1.12.1"
   custom:
     metrics_enable: false
     admission_enable: true
@@ -164,8 +164,8 @@ devicePlugin:
   enabled: true
   image:
     registry: ghcr.io
-    repository: llmos-ai/volcano-vgpu-device-plugin
-    tag: "v1.9.4-llmos1"
+    repository: llmos-ai/mirrored-projecthami-volcano-vgpu-device-plugin
+    tag: "v1.10.0"
     pullPolicy: IfNotPresent
   updateStrategy: "RollingUpdate"
   podAnnotations: {}
