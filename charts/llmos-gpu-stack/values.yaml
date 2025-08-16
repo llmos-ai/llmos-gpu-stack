@@ -141,6 +141,7 @@ volcano:
         - name: deviceshare
           arguments:
             deviceshare.VGPUEnable: true  # enable vgpu
+            deviceshare.SchedulePolicy: binpack  # scheduling policy. binpack/spread
         - name: predicates
         - name: proportion
         - name: nodeorder
@@ -164,8 +165,8 @@ devicePlugin:
   enabled: true
   image:
     registry: ghcr.io
-    repository: llmos-ai/mirrored-projecthami-volcano-vgpu-device-plugin
-    tag: "v1.10.0"
+    repository: llmos-ai/volcano-vgpu-device-plugin
+    tag: "v1.10.0-llmos1"
     pullPolicy: IfNotPresent
   updateStrategy: "RollingUpdate"
   podAnnotations: {}
