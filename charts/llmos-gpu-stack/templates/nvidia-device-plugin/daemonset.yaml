@@ -63,12 +63,21 @@ spec:
                   fieldPath: spec.nodeName
             - name: HOOK_PATH
               value: "/usr/local/vgpu"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+            - name: NVIDIA_MIG_MONITOR_DEVICES
+              value: "all"
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "utility"
           securityContext:
-            allowPrivilegeEscalation: false
+            allowPrivilegeEscalation: true
+            privileged: true
             capabilities:
               drop: ["ALL"]
               add: ["SYS_ADMIN"]
           volumeMounts:
+            - name: deviceconfig
+              mountPath: /config
             - name: device-plugin
               mountPath: /var/lib/kubelet/device-plugins
             - name: lib
@@ -95,7 +104,8 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           securityContext:
-            allowPrivilegeEscalation: false
+            privileged: true
+            allowPrivilegeEscalation: true
             capabilities:
               drop: ["ALL"]
               add: ["SYS_ADMIN"]
@@ -112,6 +122,9 @@ spec:
               mountPath: /tmp
 {{- end }}
       volumes:
+        - name: deviceconfig
+          configMap:
+            name: volcano-vgpu-node-config
         - hostPath:
             path: /var/lib/kubelet/device-plugins
             type: Directory
