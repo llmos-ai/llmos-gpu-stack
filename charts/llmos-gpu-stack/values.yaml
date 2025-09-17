@@ -183,5 +183,6 @@ devicePlugin:
       effect: NoSchedule
   affinity: {}
   splitCount: 10
+  gpuMemoryFactor: 1
   metrics:
     enabled: false

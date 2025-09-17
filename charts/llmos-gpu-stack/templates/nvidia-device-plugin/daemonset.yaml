@@ -51,7 +51,8 @@ spec:
           image: {{ printf "%s/%s:%s" $registry .Values.devicePlugin.image.repository .Values.devicePlugin.image.tag }}
           imagePullPolicy: {{ .Values.devicePlugin.image.pullPolicy }}
           args:
-            - "--device-split-count={{ .Values.devicePlugin.splitCount}}"
+            - "--device-split-count={{ .Values.devicePlugin.splitCount }}"
+            - "--gpu-memory-factor={{ .Values.devicePlugin.gpuMemoryFactor }}"
           lifecycle:
             postStart:
               exec:
